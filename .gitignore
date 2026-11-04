@@ -219,4 +219,7 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
+# Local pytest temp files
+tests/.pytest_tmp/
+
 data/
