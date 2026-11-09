@@ -26,18 +26,28 @@ NUTRIENT_FILE = "food_nutrient.csv"
 
 GENERIC_DATA_TYPES = ("foundation_food", "sr_legacy_food")
 
+NUTRIENT_PRIORITY: dict[str, tuple[int, ...]] = {
+    "energy_kcal": (1008, 2047, 2048),
+    "protein_g": (1003,),
+    "fat_g": (1004, 1085),
+    "carbohydrates_g": (1005, 1050),
+    "fiber_g": (1079, 2033),
+    "sugars_g": (2000, 1063),
+    "saturated_fat_g": (1258,),
+    "cholesterol_mg": (1253,),
+    "sodium_mg": (1093,),
+    "potassium_mg": (1092,),
+    "water_g": (1051,),
+}
+
 NUTRIENTS = {
-    1008: "energy_kcal",
-    1003: "protein_g",
-    1004: "fat_g",
-    1005: "carbohydrates_g",
-    1079: "fiber_g",
-    2000: "sugars_g",
-    1258: "saturated_fat_g",
-    1253: "cholesterol_mg",
-    1093: "sodium_mg",
-    1092: "potassium_mg",
-    1051: "water_g",
+    nutrient_ids[0]: name for name, nutrient_ids in NUTRIENT_PRIORITY.items()
+}
+
+NUTRIENT_ID_MAP = {
+    nutrient_id: name
+    for name, nutrient_ids in NUTRIENT_PRIORITY.items()
+    for nutrient_id in nutrient_ids
 }
 
 SOURCE_PRIORITY = {
@@ -193,23 +203,42 @@ class USDAFoodRepository:
         return self._categories
 
     def nutrients(self) -> pd.DataFrame:
-        """Нутриенты на 100 г в широком формате (fdc_id × нутриенты)."""
+        """Нутриенты на 100 г в широком формате (fdc_id × нутриенты).
+
+        Поддерживаются альтернативные идентификаторы USDA: энергия может быть
+        в 1008, 2047 или 2048, сахара — в 2000 или 1063 и т.п. Явные нули
+        (``amount == 0``) сохраняются. Отсутствующая строка остаётся ``NaN``:
+        это «неизвестно», а не ноль.
+        """
         if self._nutrients is None:
             nutrients = self._read_csv(
                 NUTRIENT_FILE,
                 usecols=["fdc_id", "nutrient_id", "amount"],
                 dtype={"fdc_id": str, "nutrient_id": int, "amount": float},
             )
-            nutrients = nutrients[nutrients["nutrient_id"].isin(NUTRIENTS)].copy()
-            nutrients["nutrient_id"] = nutrients["nutrient_id"].map(NUTRIENTS)
+            nutrients = nutrients[
+                nutrients["nutrient_id"].isin(NUTRIENT_ID_MAP)
+            ].copy()
+            nutrients["nutrient"] = nutrients["nutrient_id"].map(NUTRIENT_ID_MAP)
+            nutrients["_priority"] = [
+                NUTRIENT_PRIORITY[nutrient].index(nutrient_id)
+                for nutrient, nutrient_id in zip(
+                    nutrients["nutrient"], nutrients["nutrient_id"]
+                )
+            ]
+            nutrients = nutrients.sort_values(
+                ["fdc_id", "nutrient", "_priority"]
+            ).drop_duplicates(["fdc_id", "nutrient"], keep="first")
 
-            table = nutrients.pivot_table(
-                index="fdc_id",
-                columns="nutrient_id",
-                values="amount",
-                aggfunc="first",
+            table = (
+                nutrients.pivot(
+                    index="fdc_id",
+                    columns="nutrient",
+                    values="amount",
+                )
+                .reindex(columns=list(NUTRIENTS.values()))
+                .reset_index()
             )
-            table = table.reindex(columns=list(NUTRIENTS.values())).reset_index()
             table["fdc_id"] = table["fdc_id"].astype(str)
             self._nutrients = table
         return self._nutrients
@@ -284,13 +313,23 @@ class USDAFoodRepository:
 
         return combined[RESULT_COLUMNS].reset_index(drop=True)
 
-    def add_nutrients(self, parsed: pd.DataFrame, found: pd.DataFrame) -> pd.DataFrame:
+    def add_nutrients(
+        self,
+        parsed: pd.DataFrame,
+        found: pd.DataFrame | None,
+        best: pd.DataFrame | None = None,
+    ) -> pd.DataFrame:
         """Добавить нутриенты USDA к таблице продуктов.
 
-        Для каждого продукта берётся лучший матч; несопоставленные продукты
-        сохраняются с пропущенными нутриентами и флагом ``is_matched = False``.
+        Для каждого продукта берётся лучший матч. Если передан готовый
+        ``best`` (например, из курируемой таблицы), поиск не выполняется.
+        Несопоставленные продукты сохраняются с пропущенными нутриентами и
+        флагом ``is_matched = False``.
         """
-        best = select_best_matches(found)
+        if best is None:
+            if found is None:
+                raise ValueError("Нужен либо found, либо best с матчами продуктов")
+            best = select_best_matches(found)
         nutrients = self.nutrients()
 
         table = parsed.merge(best, on="product", how="left")
@@ -349,8 +388,9 @@ def search_products(
 
 def add_nutrients(
     parsed: pd.DataFrame,
-    found: pd.DataFrame,
+    found: pd.DataFrame | None,
     data_dir: str | PathLike,
+    best: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
     """Обогатить таблицу продуктов нутриентами USDA на 100 г."""
-    return _repository(str(Path(data_dir))).add_nutrients(parsed, found)
+    return _repository(str(Path(data_dir))).add_nutrients(parsed, found, best=best)

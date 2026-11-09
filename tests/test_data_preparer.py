@@ -15,6 +15,7 @@ def preparer(tmp_path, diary_frame, usda_dir):
         usda_dir=usda_dir,
         processed_dir=tmp_path / "processed",
         min_products_with_nutrients=1,
+        product_map_path=None,
     )
 
 
@@ -86,6 +87,7 @@ def test_min_products_controls_reliability(tmp_path, diary_frame, usda_dir):
         usda_dir=usda_dir,
         processed_dir=tmp_path / "processed",
         min_products_with_nutrients=2,
+        product_map_path=None,
     )
     _, meal, day = preparer.prepare(force=True)
 
@@ -105,7 +107,8 @@ def test_min_products_controls_reliability(tmp_path, diary_frame, usda_dir):
 
     assert bool(breakfast["is_reliable"])
     assert not bool(lunch["is_reliable"])
-    assert bool(first_day["is_reliable"])
+    assert not bool(first_day["is_reliable"])
+    assert not bool(first_day["core_complete"])
 
 
 def test_summary(preparer):
@@ -126,6 +129,96 @@ def test_product_table_is_cached(preparer):
 
     assert preparer.product_table_path.exists()
     pd.testing.assert_frame_equal(first, second)
+
+
+def test_curated_map_does_not_fallback(tmp_path, diary_frame, usda_dir):
+    map_path = tmp_path / "product_map.csv"
+    pd.DataFrame(
+        [
+            {
+                "product": "chicken",
+                "fdc_id": "1",
+                "match_name": "chicken breast",
+                "data_type": "foundation_food",
+                "notes": "test",
+                "reviewed": "true",
+            },
+            {
+                "product": "unknown",
+                "fdc_id": "",
+                "match_name": "",
+                "data_type": "",
+                "notes": "unmatched",
+                "reviewed": "true",
+            },
+        ]
+    ).to_csv(map_path, index=False)
+    diary_path = tmp_path / "diet_diary.csv"
+    diary_frame.to_csv(diary_path, index=False)
+
+    preparer = DataPreparer(
+        diary_path=diary_path,
+        usda_dir=usda_dir,
+        processed_dir=tmp_path / "processed",
+        product_map_path=map_path,
+    )
+    product, _, _ = preparer.prepare(force=True)
+
+    chicken = product[product["product"] == "chicken"]
+    unknown = product[product["product"] == "unknown"]
+    assert chicken["is_matched"].all()
+    assert chicken["match_source"].eq("curated_map").all()
+    assert not unknown["is_matched"].any()
+    assert unknown["match_source"].eq("unmapped").all()
+    assert unknown["energy_kcal"].isna().all()
+    assert product.loc[product["product"] == "rice", "is_matched"].eq(False).all()
+
+
+def test_meal_coverage_flags_and_no_zero_fill(tmp_path):
+    products = pd.DataFrame(
+        [
+            {
+                "id": "u1",
+                "date": pd.Timestamp("2024-01-01"),
+                "meal": "breakfast",
+                "product": "chicken",
+                "energy_kcal": 100.0,
+                "protein_g": 10.0,
+                "fat_g": 2.0,
+                "carbohydrates_g": 0.0,
+            },
+            {
+                "id": "u1",
+                "date": pd.Timestamp("2024-01-01"),
+                "meal": "breakfast",
+                "product": "unknown",
+                "energy_kcal": pd.NA,
+                "protein_g": pd.NA,
+                "fat_g": pd.NA,
+                "carbohydrates_g": pd.NA,
+            },
+        ]
+    )
+    preparer = DataPreparer(processed_dir=tmp_path, product_map_path=None)
+    meal = preparer.aggregate_by_user_meal(products)
+
+    row = meal.iloc[0]
+    assert row["n_products"] == 2
+    assert row["protein_g_n_products"] == 1
+    assert row["protein_g_coverage"] == pytest.approx(0.5)
+    assert bool(row["protein_g_missing"])
+    assert row["protein_g_mean_per_100g"] == pytest.approx(10.0)
+    assert row["energy_kcal_mean_per_100g"] == pytest.approx(100.0)
+    assert not bool(row["core_complete"])
+    assert not bool(row["is_reliable"])
+
+    strict = DataPreparer(
+        processed_dir=tmp_path,
+        min_products_with_nutrients=2,
+        product_map_path=None,
+    )
+    strict_meal = strict.aggregate_by_user_meal(products)
+    assert pd.isna(strict_meal.iloc[0]["protein_g_mean_per_100g"])
 
 
 def test_missing_usda_raises(tmp_path, diary_frame):

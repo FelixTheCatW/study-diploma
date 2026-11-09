@@ -66,6 +66,27 @@ def test_repository_returns_all_nutrient_columns(usda_dir):
     assert pd.api.types.is_string_dtype(nutrients["fdc_id"])
 
 
+def test_nutrient_aliases_and_explicit_zero(tmp_path):
+    directory = tmp_path / "usda"
+    directory.mkdir()
+    pd.DataFrame(
+        [
+            {"fdc_id": "1", "nutrient_id": 1008, "amount": 110.0},
+            {"fdc_id": "1", "nutrient_id": 2047, "amount": 100.0},
+            {"fdc_id": "1", "nutrient_id": 1063, "amount": 5.0},
+            {"fdc_id": "1", "nutrient_id": 1093, "amount": 0.0},
+        ]
+    ).to_csv(directory / "food_nutrient.csv", index=False)
+
+    nutrients = USDAFoodRepository(directory).nutrients()
+    row = nutrients[nutrients["fdc_id"] == "1"].iloc[0]
+
+    assert row["energy_kcal"] == 110.0
+    assert row["sugars_g"] == 5.0
+    assert row["sodium_mg"] == 0.0
+    assert pd.isna(row["fiber_g"])
+
+
 def test_missing_usda_directory_raises(tmp_path):
     with pytest.raises(FileNotFoundError, match="Каталог USDA не найден"):
         search_products(["chicken"], tmp_path / "missing")
