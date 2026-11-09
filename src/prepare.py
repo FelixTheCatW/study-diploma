@@ -9,7 +9,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from src.config import DIARY_CSV, PROCESSED_DIR
+from src.config import DIARY_CSV, PROCESSED_DIR, PRODUCT_MAP_PATH
 from src.data_preparer import DataPreparer
 
 
@@ -28,7 +28,13 @@ def build_parser() -> argparse.ArgumentParser:
         "--min-products",
         type=int,
         default=1,
-        help="Минимум продуктов с нутриентами для флага is_reliable",
+        help="Минимум продуктов с нутриентами для среднего и is_reliable",
+    )
+    parser.add_argument(
+        "--product-map",
+        type=Path,
+        default=PRODUCT_MAP_PATH,
+        help="Курируемая таблица продукт -> fdc_id",
     )
     return parser
 
@@ -40,6 +46,7 @@ def main(argv: list[str] | None = None) -> int:
         usda_dir=args.usda_dir,
         processed_dir=args.processed_dir,
         min_products_with_nutrients=args.min_products,
+        product_map_path=args.product_map,
     )
 
     try:

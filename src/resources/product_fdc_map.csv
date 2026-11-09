@@ -1,0 +1,198 @@
+product,fdc_id,match_name,data_type,notes,reviewed
+egg,171287,"Egg, whole, raw, fresh",sr_legacy_food,curated generic match,true
+milk,171265,"Milk, whole, 3.25% milkfat, with added vitamin D",sr_legacy_food,SR Legacy whole milk,true
+rice,169753,"Rice, white, long-grain, regular, cooked, enriched, with salt",sr_legacy_food,"cooked, enriched, with salt",true
+cabbage,169975,"Cabbage, raw",sr_legacy_food,curated generic match,true
+potato,170440,"Potatoes, boiled, cooked without skin, flesh, without salt",sr_legacy_food,curated generic match,true
+chicken,171447,"Chicken, broilers or fryers, meat and skin, raw",sr_legacy_food,curated generic match,true
+tofu,172475,"Tofu, raw, firm, prepared with calcium sulfate",sr_legacy_food,curated generic match,true
+tomato,170457,"Tomatoes, red, ripe, raw, year round average",sr_legacy_food,curated generic match,true
+beef,174036,"Beef, ground, 80% lean meat / 20% fat, raw",sr_legacy_food,curated generic match,true
+corn,169998,"Corn, sweet, yellow, raw",sr_legacy_food,curated generic match,true
+porridge,173905,"Cereals, oats, regular and quick, unenriched, cooked with water (includes boiling and microwaving), without salt",sr_legacy_food,"cooked oats, without salt",true
+cucumber,168409,"Cucumber, with peel, raw",sr_legacy_food,curated generic match,true
+vegetable,,,,ambiguous product name; intentionally unmatched,true
+fish,173711,"Fish, whitefish, mixed species, raw",sr_legacy_food,proxy: mixed whitefish,true
+meal_replacement_powder,174181,"Beverages, nutritional shake mix, high protein, powder",sr_legacy_food,proxy: nutritional shake powder,true
+bread,174924,"Bread, white, commercially prepared (includes soft bread crumbs)",sr_legacy_food,curated generic match,true
+shrimp,175179,"Crustaceans, shrimp, raw",sr_legacy_food,curated generic match,true
+lettuce,2346388,"Lettuce, iceberg, raw",foundation_food,curated generic match,true
+soup,,,,ambiguous product name; intentionally unmatched,true
+meat,,,,ambiguous product name; intentionally unmatched,true
+mushroom,169251,"Mushrooms, white, raw",sr_legacy_food,curated generic match,true
+bean,169961,"Beans, snap, green, raw",sr_legacy_food,curated generic match,true
+green,,,,ambiguous product name; intentionally unmatched,true
+carrot,170393,"Carrots, raw",sr_legacy_food,curated generic match,true
+yogurt,171284,"Yogurt, plain, whole milk",sr_legacy_food,curated generic match,true
+pumpkin,168448,"Pumpkin, raw",sr_legacy_food,curated generic match,true
+oatmeal,173905,"Cereals, oats, regular and quick, unenriched, cooked with water (includes boiling and microwaving), without salt",sr_legacy_food,"cooked oats, without salt",true
+spinach,168462,"Spinach, raw",sr_legacy_food,curated generic match,true
+broccoli,170379,"Broccoli, raw",sr_legacy_food,curated generic match,true
+celery,169988,"Celery, raw",sr_legacy_food,curated generic match,true
+water,169301,"Water convolvulus,raw",sr_legacy_food,assumed water spinach (water convolvulus),true
+pork,168249,"Pork, fresh, loin, tenderloin, separable lean only, raw",sr_legacy_food,curated generic match,true
+melon,169092,"Melons, cantaloupe, raw",sr_legacy_food,curated generic match,true
+apple,171688,"Apples, raw, with skin (Includes foods for USDA's Food Distribution Program)",sr_legacy_food,curated generic match,true
+noodle,168919,"Noodles, egg, cooked, enriched, with added salt",sr_legacy_food,"cooked, enriched, with added salt",true
+kelp,168457,"Seaweed, kelp, raw",sr_legacy_food,curated generic match,true
+pepper,170427,"Peppers, sweet, green, raw",sr_legacy_food,curated generic match,true
+cauliflower,169986,"Cauliflower, raw",sr_legacy_food,curated generic match,true
+duck,172408,"Duck, domesticated, meat and skin, raw",sr_legacy_food,curated generic match,true
+sprout,169957,"Mung beans, mature seeds, sprouted, raw",sr_legacy_food,curated generic match,true
+radish,169276,"Radishes, raw",sr_legacy_food,curated generic match,true
+onion,170000,"Onions, raw",sr_legacy_food,curated generic match,true
+yam,170071,"Yam, raw",sr_legacy_food,curated generic match,true
+orange,169097,"Oranges, raw, all commercial varieties",sr_legacy_food,curated generic match,true
+fruit,,,,ambiguous product name; intentionally unmatched,true
+wood_ear,168581,"Fungi, Cloud ears, dried",sr_legacy_food,curated generic match,true
+bun,172796,"Rolls, hamburger or hotdog, plain",sr_legacy_food,hamburger/hotdog roll,true
+salad,,,,ambiguous product name; intentionally unmatched,true
+cake,172706,"Cake, sponge, commercially prepared",sr_legacy_food,curated generic match,true
+bamboo_shoot,169210,"Bamboo shoots, raw",sr_legacy_food,curated generic match,true
+dumpling,2708708,"Wonton, dumpling or pot sticker, steamed",survey_fndds_food,steamed wonton/dumpling,true
+eggplant,169228,"Eggplant, raw",sr_legacy_food,curated generic match,true
+shellfish,,,,ambiguous product name; intentionally unmatched,true
+fungus,168423,"Mushrooms, morel, raw",sr_legacy_food,curated generic match,true
+banana,173944,"Bananas, raw",sr_legacy_food,curated generic match,true
+lotus_root,169250,"Lotus root, raw",sr_legacy_food,curated generic match,true
+salmon,175167,"Fish, salmon, Atlantic, farmed, raw",sr_legacy_food,curated generic match,true
+chrysanthemum,168491,"Chrysanthemum leaves, raw",sr_legacy_food,curated generic match,true
+taro,169308,"Taro, raw",sr_legacy_food,curated generic match,true
+sauce,,,,ambiguous product name; intentionally unmatched,true
+coffee,171890,"Beverages, coffee, brewed, prepared with tap water",sr_legacy_food,curated generic match,true
+lamb,174370,"Lamb, ground, raw",sr_legacy_food,curated generic match,true
+tea,174120,"Beverages, tea, Oolong, brewed",sr_legacy_food,curated generic match,true
+pancake,175009,"Pancakes, plain, prepared from recipe",sr_legacy_food,prepared from recipe,true
+peach,169928,"Peaches, yellow, raw",sr_legacy_food,curated generic match,true
+kiwifruit,168153,"Kiwifruit, green, raw",sr_legacy_food,curated generic match,true
+nut,170585,"Nuts, mixed nuts, dry roasted, with peanuts, without salt added",sr_legacy_food,proxy: mixed nuts,true
+grapefruit,174673,"Grapefruit, raw, pink and red, all areas",sr_legacy_food,curated generic match,true
+cherry,171719,"Cherries, sweet, raw",sr_legacy_food,curated generic match,true
+okra,169260,"Okra, raw",sr_legacy_food,curated generic match,true
+walnut,170187,"Nuts, walnuts, english",sr_legacy_food,curated generic match,true
+chive,169994,"Chives, raw",sr_legacy_food,curated generic match,true
+pear,169118,"Pears, raw",sr_legacy_food,curated generic match,true
+zucchini,169291,"Squash, summer, zucchini, includes skin, raw",sr_legacy_food,curated generic match,true
+sugar,169655,"Sugars, granulated",sr_legacy_food,curated generic match,true
+crab,174204,"Crustaceans, crab, blue, raw",sr_legacy_food,curated generic match,true
+peanut,172430,"Peanuts, all types, raw",sr_legacy_food,curated generic match,true
+artemisia,,,,ambiguous product name; intentionally unmatched,true
+juice,,,,ambiguous product name; intentionally unmatched,true
+millet,169702,"Millet, raw",sr_legacy_food,curated generic match,true
+date,168191,"Dates, medjool",sr_legacy_food,curated generic match,true
+grain,,,,ambiguous product name; intentionally unmatched,true
+sausage,174579,"Sausage, pork and beef, fresh, cooked",sr_legacy_food,"pork and beef, fresh, cooked",true
+wine,173190,"Alcoholic beverage, wine, table, red",sr_legacy_food,curated generic match,true
+leek,169246,"Leeks, (bulb and lower leaf-portion), raw",sr_legacy_food,curated generic match,true
+mackerel,175119,"Fish, mackerel, Atlantic, raw",sr_legacy_food,curated generic match,true
+watermelon,167765,"Watermelon, raw",sr_legacy_food,curated generic match,true
+grape,174683,"Grapes, red or green (European type, such as Thompson seedless), raw",sr_legacy_food,curated generic match,true
+oil,171413,"Oil, olive, salad or cooking",sr_legacy_food,proxy: olive oil,true
+spareribs,167853,"Pork, fresh, spareribs, separable lean and fat, raw",sr_legacy_food,curated generic match,true
+cowpea,173758,"Cowpeas, common (blackeyes, crowder, southern), mature seeds, raw",sr_legacy_food,curated generic match,true
+milkshake,170884,"Milk shakes, thick vanilla",sr_legacy_food,curated generic match,true
+berry,,,,ambiguous product name; intentionally unmatched,true
+mustard,172234,"Mustard, prepared, yellow",sr_legacy_food,curated generic match,true
+cantaloupe,169092,"Melons, cantaloupe, raw",sr_legacy_food,same as melon,true
+asparagus,168389,"Asparagus, raw",sr_legacy_food,curated generic match,true
+seeds,170154,"Seeds, sunflower seed kernels, toasted, without salt",sr_legacy_food,proxy: sunflower kernels,true
+seedlings,,,,ambiguous product name; intentionally unmatched,true
+fillet,,,,ambiguous product name; intentionally unmatched,true
+moss,,,,ambiguous product name; intentionally unmatched,true
+protein_bar,173158,"Formulated Bar, SOUTH BEACH protein bar",sr_legacy_food,curated generic match,true
+wheat,169721,"Wheat, durum",sr_legacy_food,curated generic match,true
+garlic,169230,"Garlic, raw",sr_legacy_food,curated generic match,true
+amaranth,170682,"Amaranth grain, uncooked",sr_legacy_food,curated generic match,true
+soba,168907,"Noodles, japanese, soba, cooked",sr_legacy_food,curated generic match,true
+tuna,334194,"Fish, tuna, light, canned in water, drained solids",foundation_food,curated generic match,true
+pasta,169737,"Pasta, cooked, enriched, without added salt",sr_legacy_food,curated generic match,true
+squid,174223,"Mollusks, squid, mixed species, raw",sr_legacy_food,curated generic match,true
+coriander,169997,"Coriander (cilantro) leaves, raw",sr_legacy_food,curated generic match,true
+dragonfish,,,,ambiguous product name; intentionally unmatched,true
+kale,168421,"Kale, raw",sr_legacy_food,curated generic match,true
+sandwich,,,,ambiguous product name; intentionally unmatched,true
+biscuit,172670,"Biscuits, plain or buttermilk, prepared from recipe",sr_legacy_food,curated generic match,true
+soybean,174270,"Soybeans, mature seeds, raw",sr_legacy_food,curated generic match,true
+sauerkraut,169279,"Sauerkraut, canned, solids and liquids",sr_legacy_food,curated generic match,true
+chestnut,170575,"Nuts, chestnuts, european, raw, peeled",sr_legacy_food,"european, raw, peeled",true
+ham,173864,"Ham, sliced, regular (approximately 11% fat)",sr_legacy_food,sliced ham,true
+bacon,168277,"Pork, cured, bacon, unprepared",sr_legacy_food,"cured pork bacon, unprepared",true
+lemonade,174861,"Beverages, lemonade-flavor drink, powder, prepared with water",sr_legacy_food,"powder, prepared with water",true
+pea,170419,"Peas, green, raw",sr_legacy_food,curated generic match,true
+silver_ear,,,,ambiguous product name; intentionally unmatched,true
+wonton,172802,Wonton wrappers (includes egg roll wrappers),sr_legacy_food,curated generic match,true
+almond,170567,"Nuts, almonds",sr_legacy_food,curated generic match,true
+konjac,,,,ambiguous product name; intentionally unmatched,true
+bone,,,,ambiguous product name; intentionally unmatched,true
+spare_ribs,167853,"Pork, fresh, spareribs, separable lean and fat, raw",sr_legacy_food,same as spareribs,true
+raisin,168165,"Raisins, dark, seedless (Includes foods for USDA's Food Distribution Program)",sr_legacy_food,curated generic match,true
+cod,171955,"Fish, cod, Atlantic, raw",sr_legacy_food,curated generic match,true
+chili,172097,"Chili con carne with beans, canned entree",sr_legacy_food,curated generic match,true
+gourd,168414,"Gourd, dishcloth (towelgourd), raw",sr_legacy_food,curated generic match,true
+sesame,170150,"Seeds, sesame seeds, whole, dried",sr_legacy_food,curated generic match,true
+squash,168472,"Squash, winter, acorn, raw",sr_legacy_food,curated generic match,true
+plum,169949,"Plums, raw",sr_legacy_food,curated generic match,true
+eel,174193,"Fish, eel, mixed species, raw",sr_legacy_food,curated generic match,true
+soymilk,172446,"Soymilk, original and vanilla, unfortified",sr_legacy_food,"original and vanilla, unfortified",true
+lentil,172420,"Lentils, raw",sr_legacy_food,curated generic match,true
+pomegranate,169134,"Pomegranates, raw",sr_legacy_food,curated generic match,true
+mango,169910,"Mangos, raw",sr_legacy_food,curated generic match,true
+sushi,2708961,"Sushi roll, California",survey_fndds_food,proxy: California roll,true
+brassica,,,,ambiguous product name; intentionally unmatched,true
+quinoa,168917,"Quinoa, cooked",sr_legacy_food,curated generic match,true
+rapeseed,172336,"Oil, canola",sr_legacy_food,curated generic match,true
+soy,,,,ambiguous product name; intentionally unmatched,true
+probiotic,,,,ambiguous product name; intentionally unmatched,true
+cuttlefish,174215,"Mollusks, cuttlefish, mixed species, raw",sr_legacy_food,curated generic match,true
+rabbit,174347,"Game meat, rabbit, wild, raw",sr_legacy_food,curated generic match,true
+pickles,169379,"Pickles, cucumber, sour",sr_legacy_food,curated generic match,true
+bullfrog,168148,"Frog legs, raw",sr_legacy_food,curated generic match,true
+gluten,168147,Vital wheat gluten,sr_legacy_food,curated generic match,true
+goose,174470,"Goose, domesticated, meat and skin, raw",sr_legacy_food,curated generic match,true
+chilli,,,,ambiguous product name; intentionally unmatched,true
+barley,170284,"Barley, pearled, raw",sr_legacy_food,curated generic match,true
+courgettes,169291,"Squash, summer, zucchini, includes skin, raw",sr_legacy_food,same as zucchini,true
+spaghetti,169737,"Pasta, cooked, enriched, without added salt",sr_legacy_food,"pasta, cooked, enriched",true
+pineapple,169124,"Pineapple, raw, all varieties",sr_legacy_food,curated generic match,true
+buckwheat,170286,Buckwheat,sr_legacy_food,curated generic match,true
+jellyfish,168129,"Jellyfish, dried, salted",sr_legacy_food,curated generic match,true
+cola,174852,"Beverages, carbonated, cola, regular",sr_legacy_food,curated generic match,true
+chickpea,173756,"Chickpeas (garbanzo beans, bengal gram), mature seeds, raw",sr_legacy_food,curated generic match,true
+papaya,169926,"Papayas, raw",sr_legacy_food,curated generic match,true
+octopus,174218,"Mollusks, octopus, common, raw",sr_legacy_food,curated generic match,true
+omelette,172185,"Egg, whole, cooked, omelet",sr_legacy_food,curated generic match,true
+cookie,172716,"Cookies, chocolate chip, commercially prepared, regular, higher fat, enriched",sr_legacy_food,"chocolate chip, higher fat",true
+guava,173044,"Guavas, common, raw",sr_legacy_food,curated generic match,true
+tilapia,175176,"Fish, tilapia, raw",sr_legacy_food,curated generic match,true
+pizza,170317,"Pizza, cheese topping, regular crust, frozen, cooked",sr_legacy_food,curated generic match,true
+chocolate,170273,"Chocolate, dark, 70-85% cacao solids",sr_legacy_food,curated generic match,true
+fork,,,,ambiguous product name; intentionally unmatched,true
+beetroot,169145,"Beets, raw",sr_legacy_food,curated generic match,true
+tart,,,,ambiguous product name; intentionally unmatched,true
+bird's_nest,,,,ambiguous product name; intentionally unmatched,true
+olive,169094,"Olives, ripe, canned (small-extra large)",sr_legacy_food,curated generic match,true
+borscht,2710105,"Soup, borscht",survey_fndds_food,curated generic match,true
+conch,173720,"Mollusks, conch, baked or broiled",sr_legacy_food,curated generic match,true
+avocado,171705,"Avocados, raw, all commercial varieties",sr_legacy_food,curated generic match,true
+persimmon,169941,"Persimmons, japanese, raw",sr_legacy_food,curated generic match,true
+mint,173474,"Peppermint, fresh",sr_legacy_food,curated generic match,true
+mangosteen,169090,"Mangosteen, canned, syrup pack",sr_legacy_food,curated generic match,true
+lily,,,,ambiguous product name; intentionally unmatched,true
+tripe,170599,"Beef, variety meats and by-products, tripe, raw",sr_legacy_food,curated generic match,true
+vinaigrette,,,,ambiguous product name; intentionally unmatched,true
+pigeon,171079,"Squab, (pigeon), meat only, raw",sr_legacy_food,curated generic match,true
+barbecue,174523,"Sauce, barbecue",sr_legacy_food,curated generic match,true
+curry,170924,"Spices, curry powder",sr_legacy_food,curated generic match,true
+cheese,328637,"Cheese, cheddar",foundation_food,proxy: cheddar,true
+ice_cream,167575,"Ice creams, vanilla",sr_legacy_food,curated generic match,true
+ginger,169231,"Ginger root, raw",sr_legacy_food,curated generic match,true
+spring_rolls,,,,ambiguous product name; intentionally unmatched,true
+arugula,169387,"Arugula, raw",sr_legacy_food,curated generic match,true
+parsley,170416,"Parsley, fresh",sr_legacy_food,curated generic match,true
+cilantro,169997,"Coriander (cilantro) leaves, raw",sr_legacy_food,curated generic match,true
+fig,173021,"Figs, raw",sr_legacy_food,curated generic match,true
+hawthorn,,,,ambiguous product name; intentionally unmatched,true
+risotto,,,,ambiguous product name; intentionally unmatched,true
+loquat,169908,"Loquats, raw",sr_legacy_food,curated generic match,true
+custard,169595,"Desserts, egg custard, baked, prepared-from-recipe",sr_legacy_food,curated generic match,true
+tacos,167658,"Restaurant, Mexican, soft taco with ground beef, cheese and lettuce",sr_legacy_food,proxy: restaurant soft taco,true

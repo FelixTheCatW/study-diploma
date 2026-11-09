@@ -33,6 +33,7 @@ PRODUCT_TABLE_PATH = PROCESSED_DIR / "product_table.csv"
 MEAL_TABLE_PATH = PROCESSED_DIR / "meal_table.csv"
 DAY_TABLE_PATH = PROCESSED_DIR / "day_table.csv"
 DATA_PROFILE_PATH = REPORTS_DIR / "data_profile.md"
+PRODUCT_MAP_PATH = BASE_DIR / "src" / "resources" / "product_fdc_map.csv"
 
 MEAL_COLUMNS = ("breakfast", "lunch", "supper")
 
@@ -51,6 +52,8 @@ NUTRIENT_COLUMNS = [
 ]
 
 FEATURE_COLUMNS = [column for column in NUTRIENT_COLUMNS if column != "energy_kcal"]
+
+CORE_NUTRIENTS = ("energy_kcal", "protein_g", "fat_g", "carbohydrates_g")
 
 DIARY_REQUIRED_COLUMNS = ("ID", "date", *MEAL_COLUMNS, "start_weight", "weight")
 

@@ -17,14 +17,21 @@ from pathlib import Path
 import pandas as pd
 
 from src.config import (
+    CORE_NUTRIENTS,
     DIARY_CSV,
     MIN_PRODUCTS_WITH_NUTRIENTS,
     NUTRIENT_COLUMNS,
     PROCESSED_DIR,
+    PRODUCT_MAP_PATH,
     resolve_usda_dir,
 )
 from src.data_loader import DataLoader
-from src.utils import add_nutrients, parse_diary, search_products
+from src.utils import (
+    add_nutrients,
+    curated_best_matches,
+    parse_diary,
+    search_products,
+)
 
 
 def _normalize_identifier(value: object) -> object:
@@ -34,6 +41,14 @@ def _normalize_identifier(value: object) -> object:
     if text.endswith(".0") and text[:-2].isdigit():
         return text[:-2]
     return text
+
+
+def _to_bool(value: object) -> bool:
+    if pd.isna(value):
+        return False
+    if isinstance(value, bool):
+        return value
+    return str(value).strip().lower() in {"true", "1", "yes", "да"}
 
 
 class DataPreparer:
@@ -49,10 +64,14 @@ class DataPreparer:
         day_table_path: str | Path | None = None,
         nutrient_columns: list[str] | None = None,
         min_products_with_nutrients: int = MIN_PRODUCTS_WITH_NUTRIENTS,
+        product_map_path: str | Path | None = PRODUCT_MAP_PATH,
     ):
         self.diary_path = Path(diary_path)
         self.usda_dir = Path(usda_dir) if usda_dir is not None else None
         self.processed_dir = Path(processed_dir)
+        self.product_map_path = (
+            Path(product_map_path) if product_map_path is not None else None
+        )
         self.product_table_path = (
             Path(product_table_path)
             if product_table_path is not None
@@ -83,7 +102,15 @@ class DataPreparer:
         table = table.copy()
         if "date" in table.columns:
             table["date"] = pd.to_datetime(table["date"], errors="coerce")
-        for column in ("id", "meal", "product", "images", "match_source", "match_name"):
+        for column in (
+            "id",
+            "meal",
+            "product",
+            "images",
+            "match_source",
+            "match_name",
+            "notes",
+        ):
             if column in table.columns:
                 table[column] = table[column].astype("string")
         if "fdc_id" in table.columns:
@@ -93,7 +120,9 @@ class DataPreparer:
                 table["n_images"], errors="coerce"
             ).astype("Int64")
         if "is_matched" in table.columns:
-            table["is_matched"] = table["is_matched"].astype(bool)
+            table["is_matched"] = table["is_matched"].map(_to_bool)
+        if "reviewed" in table.columns:
+            table["reviewed"] = table["reviewed"].map(_to_bool)
         for column in self.nutrient_columns:
             if column in table.columns:
                 table[column] = pd.to_numeric(table[column], errors="coerce")
@@ -106,7 +135,10 @@ class DataPreparer:
     def build_product_table(self, force: bool = False) -> pd.DataFrame:
         """Построить таблицу «продукт в приёме» и обогатить её USDA.
 
-        Если кэш существует и ``force=False``, таблица загружается с диска.
+        Если задана курируемая таблица сопоставления, используется только она:
+        автоматический подбор по короткому названию не выполняется. Иначе
+        сохраняется прежний эвристический поиск (для обратной совместимости и
+        синтетических тестов).
         """
         if self.product_table_path.exists() and not force:
             table = DataLoader.load_path(self.product_table_path)
@@ -114,8 +146,14 @@ class DataPreparer:
 
         parsed = parse_diary(self.diary_path)
         usda_dir = self._resolve_usda_dir()
-        found = search_products(parsed, usda_dir)
-        table = add_nutrients(parsed, found, usda_dir)
+
+        if self.product_map_path is not None:
+            best = curated_best_matches(parsed, self.product_map_path)
+            table = add_nutrients(parsed, found=None, data_dir=usda_dir, best=best)
+        else:
+            found = search_products(parsed, usda_dir)
+            table = add_nutrients(parsed, found, usda_dir)
+
         table = self._normalize_product_table(table)
         DataLoader.save_dataframe(table, self.product_table_path)
         return table
@@ -133,6 +171,52 @@ class DataPreparer:
         prepared["_completeness"] = prepared[nutrient_columns].notna().mean(axis=1)
         prepared["_has_nutrients"] = prepared["_completeness"] > 0
         return prepared, nutrient_columns
+
+    def _add_coverage(
+        self,
+        table: pd.DataFrame,
+        nutrient_columns: list[str],
+    ) -> pd.DataFrame:
+        """Добавить количество, долю и флаг пропуска по каждому нутриенту.
+
+        Среднее значение остаётся только если число продуктов с известным
+        нутриентом не меньше ``min_products_with_nutrients``. Пропуск не
+        заменяется нулём.
+        """
+        for column in nutrient_columns:
+            count_column = f"{column}_n_products"
+            coverage_column = f"{column}_coverage"
+            table[coverage_column] = table[count_column] / table["n_products"]
+            table[f"{column}_missing"] = table[coverage_column] < 1.0
+            if self.min_products_with_nutrients > 1:
+                below = table[count_column] < self.min_products_with_nutrients
+                table.loc[below, f"{column}_mean_per_100g"] = pd.NA
+        return table
+
+    def _add_reliability(
+        self,
+        table: pd.DataFrame,
+        nutrient_columns: list[str],
+    ) -> pd.DataFrame:
+        """Рассчитать полноту ядра и флаг ``is_reliable``.
+
+        Полнота ядра — минимум покрытия по energy и БЖУ. Надёжным считается
+        только приём/день, где все продукты имеют известные значения ядра;
+        одного «хоть что-то известно» недостаточно.
+        """
+        core = [column for column in CORE_NUTRIENTS if column in nutrient_columns]
+        if core:
+            coverage_columns = [f"{column}_coverage" for column in core]
+            table["core_completeness"] = table[coverage_columns].min(axis=1)
+            table["core_complete"] = table["core_completeness"] >= 1.0
+        else:
+            table["core_completeness"] = pd.NA
+            table["core_complete"] = False
+        table["is_reliable"] = (
+            table["core_complete"]
+            & (table["n_products_with_nutrients"] >= self.min_products_with_nutrients)
+        )
+        return table
 
     def _add_energy_density(
         self,
@@ -183,11 +267,19 @@ class DataPreparer:
             .add_suffix("_mean_per_100g")
             .reset_index()
         )
-        meal = summary.merge(means, on=["id", "date", "meal"], how="left")
-        meal = self._add_energy_density(meal, nutrient_columns)
-        meal["is_reliable"] = (
-            meal["n_products_with_nutrients"] >= self.min_products_with_nutrients
+        counts = (
+            grouped[nutrient_columns]
+            .count()
+            .add_suffix("_n_products")
+            .reset_index()
         )
+        meal = (
+            summary.merge(means, on=["id", "date", "meal"], how="left")
+            .merge(counts, on=["id", "date", "meal"], how="left")
+        )
+        meal = self._add_coverage(meal, nutrient_columns)
+        meal = self._add_energy_density(meal, nutrient_columns)
+        meal = self._add_reliability(meal, nutrient_columns)
         return meal.sort_values(["id", "date", "meal"]).reset_index(drop=True)
 
     def aggregate_by_user_day(self, product_table: pd.DataFrame) -> pd.DataFrame:
@@ -222,11 +314,19 @@ class DataPreparer:
             .add_suffix("_mean_per_100g")
             .reset_index()
         )
-        day = summary.merge(means, on=["id", "date"], how="left")
-        day = self._add_energy_density(day, nutrient_columns)
-        day["is_reliable"] = (
-            day["n_products_with_nutrients"] >= self.min_products_with_nutrients
+        counts = (
+            grouped[nutrient_columns]
+            .count()
+            .add_suffix("_n_products")
+            .reset_index()
         )
+        day = (
+            summary.merge(means, on=["id", "date"], how="left")
+            .merge(counts, on=["id", "date"], how="left")
+        )
+        day = self._add_coverage(day, nutrient_columns)
+        day = self._add_energy_density(day, nutrient_columns)
+        day = self._add_reliability(day, nutrient_columns)
         return day.sort_values(["id", "date"]).reset_index(drop=True)
 
     def prepare(self, force: bool = False) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
