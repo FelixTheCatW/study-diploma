@@ -34,6 +34,7 @@ class FeatureTable:
     indicator_columns: tuple[str, ...]
     n_input: int
     n_dropped: int
+    n_imputed_core: int = 0
 
     @property
     def feature_columns(self) -> tuple[str, ...]:
@@ -75,6 +76,7 @@ def build_feature_table(
     meal_table: pd.DataFrame,
     *,
     require_core_complete: bool = True,
+    impute_core: bool = False,
 ) -> FeatureTable:
     """Собрать матрицу признаков из таблицы приёмов.
 
@@ -104,9 +106,14 @@ def build_feature_table(
 
     macros = data[macro_columns].apply(pd.to_numeric, errors="coerce")
     energy = pd.to_numeric(data["energy_kcal_mean_per_100g"], errors="coerce")
+    core_valid = macros.notna().all(axis=1) & energy.notna() & (energy > 0)
+    if impute_core and core_valid.any():
+        macros = macros.fillna(macros.loc[core_valid].median())
+        energy = energy.fillna(energy.loc[core_valid].median())
+
     valid = macros.notna().all(axis=1) & (macros.sum(axis=1) > 0)
     valid &= energy.notna() & (energy > 0)
-
+    n_imputed_core = int((~core_valid & valid).sum()) if impute_core else 0
     dropped = int((~valid).sum())
     data = data.loc[valid].reset_index(drop=True)
     macros = macros.loc[valid].reset_index(drop=True)
@@ -150,6 +157,7 @@ def build_feature_table(
         indicator_columns=tuple(indicator_columns),
         n_input=n_input,
         n_dropped=dropped,
+        n_imputed_core=n_imputed_core,
     )
 
 

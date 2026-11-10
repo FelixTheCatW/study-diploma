@@ -57,6 +57,10 @@
 - Форматирование: `uv run ruff format src tests`
 - Подготовка данных: `uv run python -m src.prepare --force`
 - Кластеризация: `uv run python -m src.cluster --bootstrap 30`
+- Интерпретация: `uv run python -m src.interpretation`
+- Sensitivity: `uv run python -m src.sensitivity`
+- Экспертная разметка: `uv run python -m src.expert_validation --evaluate`
+  (после заполнения `label_template.csv`)
 
 После правок Python-кода запускать `ruff check` и `pytest`. Не коммитить без
 явного указания.

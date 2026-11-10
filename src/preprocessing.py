@@ -23,24 +23,29 @@ def _clip_robust(values: np.ndarray) -> np.ndarray:
 def make_preprocessing_pipeline(
     continuous_columns: Sequence[str],
     indicator_columns: Sequence[str],
+    *,
+    clip: bool = True,
 ) -> ColumnTransformer:
     """Медианная импутация и RobustScaler для непрерывных признаков.
 
     Missing-индикаторы передаются без масштабирования: это бинарные флаги.
+    ``clip=False`` нужен только для sensitivity-анализа.
     """
-    continuous = Pipeline(
-        steps=[
-            ("imputer", SimpleImputer(strategy="median")),
-            ("scaler", RobustScaler()),
+    steps: list[tuple[str, object]] = [
+        ("imputer", SimpleImputer(strategy="median")),
+        ("scaler", RobustScaler()),
+    ]
+    if clip:
+        steps.append(
             (
                 "clip",
                 FunctionTransformer(
                     _clip_robust,
                     feature_names_out="one-to-one",
                 ),
-            ),
-        ]
-    )
+            )
+        )
+    continuous = Pipeline(steps=steps)
     transformers: list[tuple[str, object, list[str]]] = [
         ("continuous", continuous, list(continuous_columns))
     ]

@@ -28,6 +28,11 @@ src/
   preprocessing.py     медианная импутация, RobustScaler, clip выбросов
   clustering.py        K-Means, GMM, Agglomerative, метрики, устойчивость
   cluster.py           CLI кластеризации и отчётов
+  interpretation.py    карточки кластеров, примеры, распределения
+  flags.py             риск-флаги по перцентилям reference-выборки
+  expert_validation.py пакет разметки, agreement, Cohen's kappa
+  sensitivity.py       ablation, K=2, GMM, clip, imputation
+  keys.py              стабильный meal_id
   analyze.py           CLI анализа датасетов
   prepare.py           CLI подготовки DietDiary + USDA
   utils/
@@ -168,6 +173,38 @@ median bootstrap ARI 0,984. `GMM K = 3` отклонён из-за доли кл
 Ограничения: внешних меток нет, accuracy не используется; кластер 1 (70 %)
 близок к среднему — это смешанный паттерн, а не резко выраженная группа;
 названия паттернов требуют экспертной валидации.
+
+## Интерпретация и валидация (неделя 4)
+
+```powershell
+uv run python -m src.interpretation
+uv run python -m src.sensitivity
+```
+
+Интерпретация: `reports/interpretation/` — карточки кластеров, top-5 отличий,
+примеры nearest/boundary/random, распределение по приёмам, флаги. Названия:
+`высокоэнергетический белково-жировой` (1 286), `смешанный/типичный` (7 574),
+`растительный высококлетчаточный` (1 957). Флаги: `high_saturated_fat`,
+`high_sugars`, `high_sodium`, `low_fiber`, `low_protein` по перцентилям
+reference; пропуск не трактуется как низкое значение.
+
+Экспертная валидация: `reports/expert_validation/` — 90 приёмов (30 на кластер,
+по 10 near/middle/boundary), эксперт не видит cluster/distance, ключ хранится
+отдельно. Статус: разметка не проведена. После заполнения:
+`uv run python -m src.expert_validation --evaluate --key reports/expert_validation/sample_key.csv --labels reports/expert_validation/label_template.csv`.
+Порог: kappa >= 0,5 exploratory, >= 0,6 для продуктового вывода.
+
+Sensitivity: `reports/sensitivity/`. На текущих данных: `no_sodium` ARI 0,886,
+`no_water` 0,894, `no_energy` 0,790 — решение не держится на одном нутриенте;
+`no_clip` 0,562 и min share 0,1 % — clip обязателен; `ilr_only` 0,064 —
+композиции БЖУ недостаточно; `relaxed_all_meals` 0,661 и min share 1,3 % —
+при неполных приёмах K=3 вырождается; `no_meal_replacement` 0,441 и min share
+19,1 % — без `meal_replacement_powder` K=3 остаётся невырожденным, но
+разбиение меняется; `kmeans_k2` 0,583, `gmm_k3` 0,252. Кластер 0 на 67 %
+состоит из приёмов с `meal_replacement_powder`: это продукт-специфичный
+паттерн, его нельзя обобщать как общий тип питания. Итог: `K-Means, K=3` на
+`core_complete` остаётся основным решением, но экстраполяция на неполные
+приёмы и на другие каталоги продуктов не защищена.
 
 ## Отличия от block07_exam_project
 

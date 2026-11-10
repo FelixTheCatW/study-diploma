@@ -100,3 +100,36 @@ def test_build_feature_table_drops_invalid_and_keeps_missing_flags():
         .all()
     )
     assert np.isnan(matrix.loc[1, "fiber_g_density"])
+
+
+def test_impute_core_allows_incomplete_meals_for_sensitivity():
+    table = pd.DataFrame(
+        [
+            _meal_row(
+                meal_id="breakfast",
+                protein=10.0,
+                fat=10.0,
+                carbohydrates=10.0,
+                energy=200.0,
+                core_complete=True,
+            ),
+            _meal_row(
+                meal_id="lunch",
+                protein=np.nan,
+                fat=np.nan,
+                carbohydrates=np.nan,
+                energy=np.nan,
+                core_complete=False,
+            ),
+        ]
+    )
+
+    features = build_feature_table(
+        table,
+        require_core_complete=False,
+        impute_core=True,
+    )
+
+    assert len(features.frame) == 2
+    assert features.n_imputed_core == 1
+    assert np.isfinite(features.frame["ilr_protein_fat_carb"]).all()
