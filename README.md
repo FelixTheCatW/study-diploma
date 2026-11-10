@@ -24,6 +24,10 @@ src/
   data_loader.py       CSV/Parquet: загрузка и сохранение
   data_analyzer.py     профиль датасета, пропуски, дубликаты, статистики
   data_preparer.py     продукт → приём → день
+  features.py          доли БЖУ, ILR, плотности, missing-индикаторы
+  preprocessing.py     медианная импутация, RobustScaler, clip выбросов
+  clustering.py        K-Means, GMM, Agglomerative, метрики, устойчивость
+  cluster.py           CLI кластеризации и отчётов
   analyze.py           CLI анализа датасетов
   prepare.py           CLI подготовки DietDiary + USDA
   utils/
@@ -35,7 +39,7 @@ src/
 tests/                 pytest-тесты на синтетических данных
 data/                  исходные датасеты
 data/processed/        результат подготовки
-reports/               отчёт профилирования
+reports/               профилирование, матчинг и отчёты кластеризации
 ```
 
 ## Данные
@@ -137,6 +141,34 @@ uv run python -m src.prepare --usda-dir "D:\path\to\usda" --min-products 2
 `is_reliable = True`. Остальные не удаляются, а получают пропуски,
 `coverage_*` и `missing_*`.
 
+## Кластеризация (неделя 3)
+
+```powershell
+uv run python -m src.cluster --bootstrap 30
+```
+
+Основная выборка — 10 817 приёмов с `core_complete = True`. Признаки:
+ILR долей БЖУ, энергоплотность, плотности fiber/sugars/saturated fat/sodium/
+potassium/water на 100 ккал, `log1p(n_products)` и missing-индикаторы.
+Пропуски плотностей импутируются медианой внутри Pipeline; выбросы
+ограничиваются в robust-z-пространстве (`clip` до ±5), иначе единичные
+продукты с экстремальным натрием образуют кластеры из нескольких наблюдений.
+
+Выбор K: максимальное K, прошедшее пороги `median ARI >= 0,75` и
+`min cluster share >= 5 %`, затем лучший алгоритм при этом K. На текущих
+данных выбрано `K-Means, K = 3`: размеры кластеров 1 286 / 7 574 / 1 957,
+median bootstrap ARI 0,984. `GMM K = 3` отклонён из-за доли кластера 4,2 %,
+`K-Means K = 4` — из-за 4,1 %. `Agglomerative` считается на подвыборке 5 000
+и не используется для `predict()`.
+
+Артефакты: `reports/clustering/` (`k_selection.csv`, `stability.csv`,
+`cluster_profiles.csv`, `run_metadata.json`, графики и отчёт) и
+`models/clustering_pipeline.joblib` (каталог `models/` не коммитится).
+
+Ограничения: внешних меток нет, accuracy не используется; кластер 1 (70 %)
+близок к среднему — это смешанный паттерн, а не резко выраженная группа;
+названия паттернов требуют экспертной валидации.
+
 ## Отличия от block07_exam_project
 
 - Нутриенты не суммируются на уровне приёма: используются средние значения и
@@ -176,6 +208,6 @@ uv run python -m src.prepare --usda-dir "D:\path\to\usda" --min-products 2
 
 ## Зависимости
 
-Основные: `numpy`, `pandas`, `pyarrow`. Для тестов: `pytest`.
-Полный список — в `pyproject.toml`, `requirements.txt` и
-`requirements-dev.txt`.
+Основные: `numpy`, `pandas`, `pyarrow`, `scikit-learn`, `matplotlib`, `joblib`.
+Для разработки: `pytest`, `ruff`. Полный список — в `pyproject.toml`,
+`requirements.txt` и `requirements-dev.txt`.

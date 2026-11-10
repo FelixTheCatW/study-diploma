@@ -67,9 +67,7 @@ def test_unmatched_product_is_not_zero_filled(preparer):
 def test_day_aggregation_counts_and_weight(preparer):
     _, _, day = preparer.prepare(force=True)
 
-    row = day[
-        (day["id"] == "u1") & (day["date"] == pd.Timestamp("2024-01-01"))
-    ].iloc[0]
+    row = day[(day["id"] == "u1") & (day["date"] == pd.Timestamp("2024-01-01"))].iloc[0]
 
     assert row["n_meals"] == 2
     assert row["n_products"] == 3

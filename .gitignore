@@ -223,3 +223,4 @@ __marimo__/
 tests/.pytest_tmp/
 
 data/
+models/

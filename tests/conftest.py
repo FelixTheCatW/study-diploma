@@ -10,7 +10,7 @@ _TMP_ROOT = Path(__file__).resolve().parent / ".pytest_tmp"
 _TMP_ROOT.mkdir(parents=True, exist_ok=True)
 tempfile.tempdir = str(_TMP_ROOT)
 
-from src.utils import add_nutrients, parse_diary, search_products
+from src.utils import add_nutrients, parse_diary, search_products  # noqa: E402
 
 
 @pytest.fixture()

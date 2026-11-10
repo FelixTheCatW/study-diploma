@@ -4,6 +4,7 @@
     $env:DIPLOMA_USDA_DIR = "D:\\study\\ml\\study-ml\\data\\FoodData_Central_csv_2026-04-30"
     uv run python -m src.prepare --force
 """
+
 from __future__ import annotations
 
 import argparse

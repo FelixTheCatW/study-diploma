@@ -3,6 +3,7 @@
 Поддерживаются CSV и Parquet. Parquet читается через pyarrow; при его
 отсутствии выбрасывается понятное сообщение об установке зависимости.
 """
+
 from __future__ import annotations
 
 from pathlib import Path

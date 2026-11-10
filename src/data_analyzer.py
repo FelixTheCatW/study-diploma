@@ -4,6 +4,7 @@
 сводку: размеры, пропуски, дубликаты, описательные статистики, категории и
 предупреждения о константных и высококардинальных колонках.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -82,9 +83,7 @@ class DatasetProfile:
                 for column in self.columns
             ],
             "numeric_summary": {
-                str(index): {
-                    str(key): _to_python(value) for key, value in row.items()
-                }
+                str(index): {str(key): _to_python(value) for key, value in row.items()}
                 for index, row in self.numeric_summary.iterrows()
             },
             "categorical_summary": self.categorical_summary,
@@ -142,13 +141,10 @@ class DatasetProfile:
 
         warnings: list[str] = []
         if self.constant_columns:
-            warnings.append(
-                "Константные колонки: " + ", ".join(self.constant_columns)
-            )
+            warnings.append("Константные колонки: " + ", ".join(self.constant_columns))
         if self.high_cardinality_columns:
             warnings.append(
-                "Высокая кардинальность: "
-                + ", ".join(self.high_cardinality_columns)
+                "Высокая кардинальность: " + ", ".join(self.high_cardinality_columns)
             )
         if warnings:
             lines.extend(["", "### Предупреждения", ""])
@@ -184,7 +180,9 @@ class DataAnalyzer:
                     "n_missing": n_missing,
                     "missing_share": n_missing / n_rows if n_rows else 0.0,
                     "n_unique": n_unique,
-                    "example": _to_python(non_null.iloc[0]) if not non_null.empty else None,
+                    "example": _to_python(non_null.iloc[0])
+                    if not non_null.empty
+                    else None,
                 }
             )
             if series.nunique(dropna=False) <= 1:
@@ -239,9 +237,7 @@ class DataAnalyzer:
 
         if {"id", "date"} <= set(dataframe.columns):
             summary["n_users"] = int(dataframe["id"].nunique())
-            summary["n_days"] = int(
-                len(dataframe[["id", "date"]].drop_duplicates())
-            )
+            summary["n_days"] = int(len(dataframe[["id", "date"]].drop_duplicates()))
 
         if {"id", "date", "meal"} <= set(dataframe.columns):
             summary["n_meals"] = int(
@@ -256,8 +252,7 @@ class DataAnalyzer:
                 dataframe.groupby(["id", "date", "meal"]).size().describe()
             )
             summary["products_per_meal"] = {
-                str(key): _to_python(value)
-                for key, value in products_per_meal.items()
+                str(key): _to_python(value) for key, value in products_per_meal.items()
             }
 
         present_nutrients = [

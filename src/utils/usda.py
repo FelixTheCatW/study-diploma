@@ -5,6 +5,7 @@
 Для одного продукта выбирается лучший матч: приоритет источника, точное
 совпадение названия, затем более короткое название.
 """
+
 from __future__ import annotations
 
 import re
@@ -13,11 +14,10 @@ from collections.abc import Iterable
 from functools import lru_cache
 from os import PathLike
 from pathlib import Path
-from typing import Union
 
 import pandas as pd
 
-DataInput = Union[pd.DataFrame, pd.Series, Iterable[str]]
+DataInput = pd.DataFrame | pd.Series | Iterable[str]
 
 FOODS_FILE = "food.csv"
 FOOD_CATEGORY_FILE = "food_category.csv"
@@ -40,9 +40,7 @@ NUTRIENT_PRIORITY: dict[str, tuple[int, ...]] = {
     "water_g": (1051,),
 }
 
-NUTRIENTS = {
-    nutrient_ids[0]: name for name, nutrient_ids in NUTRIENT_PRIORITY.items()
-}
+NUTRIENTS = {nutrient_ids[0]: name for name, nutrient_ids in NUTRIENT_PRIORITY.items()}
 
 NUTRIENT_ID_MAP = {
     nutrient_id: name
@@ -89,7 +87,11 @@ def _products(products: DataInput) -> list[str]:
         series = products
     else:
         series = pd.Series(list(products))
-    return [value for value in (_normalize(item) for item in series.dropna().unique()) if value]
+    return [
+        value
+        for value in (_normalize(item) for item in series.dropna().unique())
+        if value
+    ]
 
 
 def _match_products(
@@ -122,7 +124,9 @@ def _match_products(
             prefix = _normalize(token)
             positions: list = []
             position = bisect_left(sorted_words, prefix)
-            while position < len(sorted_words) and sorted_words[position].startswith(prefix):
+            while position < len(sorted_words) and sorted_words[position].startswith(
+                prefix
+            ):
                 positions.extend(word_index[sorted_words[position]])
                 position += 1
             matches[token] = sorted(positions)
@@ -188,7 +192,9 @@ class USDAFoodRepository:
             )
             branded = foods.merge(branded, on="fdc_id", how="left")
             branded = branded[branded["description"].notna()].copy()
-            branded["match_name"] = branded["short_description"].fillna(branded["description"])
+            branded["match_name"] = branded["short_description"].fillna(
+                branded["description"]
+            )
             self._branded = branded.reset_index(drop=True)
         return self._branded
 
@@ -216,14 +222,12 @@ class USDAFoodRepository:
                 usecols=["fdc_id", "nutrient_id", "amount"],
                 dtype={"fdc_id": str, "nutrient_id": int, "amount": float},
             )
-            nutrients = nutrients[
-                nutrients["nutrient_id"].isin(NUTRIENT_ID_MAP)
-            ].copy()
+            nutrients = nutrients[nutrients["nutrient_id"].isin(NUTRIENT_ID_MAP)].copy()
             nutrients["nutrient"] = nutrients["nutrient_id"].map(NUTRIENT_ID_MAP)
             nutrients["_priority"] = [
                 NUTRIENT_PRIORITY[nutrient].index(nutrient_id)
                 for nutrient, nutrient_id in zip(
-                    nutrients["nutrient"], nutrients["nutrient_id"]
+                    nutrients["nutrient"], nutrients["nutrient_id"], strict=True
                 )
             ]
             nutrients = nutrients.sort_values(
@@ -284,8 +288,18 @@ class USDAFoodRepository:
 
         modes = [match] if match == "substring" else [match, "substring"]
         sources = [
-            ("food_description", self.foods(), self.foods()["description"], "description"),
-            ("branded_food", self.branded(), self.branded()["match_name"], "match_name"),
+            (
+                "food_description",
+                self.foods(),
+                self.foods()["description"],
+                "description",
+            ),
+            (
+                "branded_food",
+                self.branded(),
+                self.branded()["match_name"],
+                "match_name",
+            ),
             ("food_category", self.categories(), self.categories()["name"], "name"),
         ]
 

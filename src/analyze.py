@@ -3,6 +3,7 @@
 Пример:
     uv run python -m src.analyze --sample 200000
 """
+
 from __future__ import annotations
 
 import argparse

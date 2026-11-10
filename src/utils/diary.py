@@ -5,14 +5,14 @@ lunch, supper) содержат изображения и перечень пр�
 маркером ``|||``. Функция :func:`parse_diary` превращает такие строки в
 таблицу уровня «продукт в приёме пищи».
 """
+
 from __future__ import annotations
 
 from os import PathLike
-from typing import Union
 
 import pandas as pd
 
-DataInput = Union[pd.DataFrame, str, PathLike]
+DataInput = pd.DataFrame | str | PathLike[str]
 
 MEAL_COLUMNS = ("breakfast", "lunch", "supper")
 NON_MEAL_COLUMNS = ("ID", "date", "start_weight", "weight")
@@ -57,7 +57,11 @@ def parse_diary(diary: DataInput) -> pd.DataFrame:
     счётчиком, чтобы их можно было использовать в фото-треке.
     """
     frame = _read(diary)
-    missing = [column for column in NON_MEAL_COLUMNS + MEAL_COLUMNS if column not in frame.columns]
+    missing = [
+        column
+        for column in NON_MEAL_COLUMNS + MEAL_COLUMNS
+        if column not in frame.columns
+    ]
     if missing:
         raise ValueError(f"В дневнике отсутствуют колонки: {missing}")
 
