@@ -3,6 +3,7 @@
 Пути к данным, перечень нутриентов, уровни агрегации и правила
 разрешения справочника USDA FoodData Central.
 """
+
 from __future__ import annotations
 
 import os
@@ -75,9 +76,7 @@ def resolve_usda_dir() -> Path:
     if env_value:
         path = Path(env_value)
         if not path.is_dir():
-            raise FileNotFoundError(
-                f"Каталог USDA из {USDA_ENV_VAR} не найден: {path}"
-            )
+            raise FileNotFoundError(f"Каталог USDA из {USDA_ENV_VAR} не найден: {path}")
         return path
 
     candidates = [DATA_DIR / USDA_DIR_NAME]

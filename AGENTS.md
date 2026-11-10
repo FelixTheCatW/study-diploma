@@ -48,6 +48,23 @@
 - Для защиты обязательны: чёткая постановка задачи, обоснование модели, воспроизводимые метрики, ограничения, бизнес-эффект и сценарий демонстрации.
 - В чате допустим жёсткий разговорный стиль; в документации — только строгий академический и деловой язык.
 
+## Команды
+
+- Установка: `uv sync --extra dev`
+- Тесты: `uv run pytest -q`
+- Lint: `uv run ruff check src tests`
+- Автоисправление: `uv run ruff check --fix src tests`
+- Форматирование: `uv run ruff format src tests`
+- Подготовка данных: `uv run python -m src.prepare --force`
+- Кластеризация: `uv run python -m src.cluster --bootstrap 30`
+- Интерпретация: `uv run python -m src.interpretation`
+- Sensitivity: `uv run python -m src.sensitivity`
+- Экспертная разметка: `uv run python -m src.expert_validation --evaluate`
+  (после заполнения `label_template.csv`)
+
+После правок Python-кода запускать `ruff check` и `pytest`. Не коммитить без
+явного указания.
+
 ## Приоритеты ревью
 
 1. Постановка задачи и соответствие целевой переменной бизнес-смыслу.

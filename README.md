@@ -24,6 +24,15 @@ src/
   data_loader.py       CSV/Parquet: загрузка и сохранение
   data_analyzer.py     профиль датасета, пропуски, дубликаты, статистики
   data_preparer.py     продукт → приём → день
+  features.py          доли БЖУ, ILR, плотности, missing-индикаторы
+  preprocessing.py     медианная импутация, RobustScaler, clip выбросов
+  clustering.py        K-Means, GMM, Agglomerative, метрики, устойчивость
+  cluster.py           CLI кластеризации и отчётов
+  interpretation.py    карточки кластеров, примеры, распределения
+  flags.py             риск-флаги по перцентилям reference-выборки
+  expert_validation.py пакет разметки, agreement, Cohen's kappa
+  sensitivity.py       ablation, K=2, GMM, clip, imputation
+  keys.py              стабильный meal_id
   analyze.py           CLI анализа датасетов
   prepare.py           CLI подготовки DietDiary + USDA
   utils/
@@ -35,7 +44,7 @@ src/
 tests/                 pytest-тесты на синтетических данных
 data/                  исходные датасеты
 data/processed/        результат подготовки
-reports/               отчёт профилирования
+reports/               профилирование, матчинг и отчёты кластеризации
 ```
 
 ## Данные
@@ -137,6 +146,66 @@ uv run python -m src.prepare --usda-dir "D:\path\to\usda" --min-products 2
 `is_reliable = True`. Остальные не удаляются, а получают пропуски,
 `coverage_*` и `missing_*`.
 
+## Кластеризация (неделя 3)
+
+```powershell
+uv run python -m src.cluster --bootstrap 30
+```
+
+Основная выборка — 10 817 приёмов с `core_complete = True`. Признаки:
+ILR долей БЖУ, энергоплотность, плотности fiber/sugars/saturated fat/sodium/
+potassium/water на 100 ккал, `log1p(n_products)` и missing-индикаторы.
+Пропуски плотностей импутируются медианой внутри Pipeline; выбросы
+ограничиваются в robust-z-пространстве (`clip` до ±5), иначе единичные
+продукты с экстремальным натрием образуют кластеры из нескольких наблюдений.
+
+Выбор K: максимальное K, прошедшее пороги `median ARI >= 0,75` и
+`min cluster share >= 5 %`, затем лучший алгоритм при этом K. На текущих
+данных выбрано `K-Means, K = 3`: размеры кластеров 1 286 / 7 574 / 1 957,
+median bootstrap ARI 0,984. `GMM K = 3` отклонён из-за доли кластера 4,2 %,
+`K-Means K = 4` — из-за 4,1 %. `Agglomerative` считается на подвыборке 5 000
+и не используется для `predict()`.
+
+Артефакты: `reports/clustering/` (`k_selection.csv`, `stability.csv`,
+`cluster_profiles.csv`, `run_metadata.json`, графики и отчёт) и
+`models/clustering_pipeline.joblib` (каталог `models/` не коммитится).
+
+Ограничения: внешних меток нет, accuracy не используется; кластер 1 (70 %)
+близок к среднему — это смешанный паттерн, а не резко выраженная группа;
+названия паттернов требуют экспертной валидации.
+
+## Интерпретация и валидация (неделя 4)
+
+```powershell
+uv run python -m src.interpretation
+uv run python -m src.sensitivity
+```
+
+Интерпретация: `reports/interpretation/` — карточки кластеров, top-5 отличий,
+примеры nearest/boundary/random, распределение по приёмам, флаги. Названия:
+`высокоэнергетический белково-жировой` (1 286), `смешанный/типичный` (7 574),
+`растительный высококлетчаточный` (1 957). Флаги: `high_saturated_fat`,
+`high_sugars`, `high_sodium`, `low_fiber`, `low_protein` по перцентилям
+reference; пропуск не трактуется как низкое значение.
+
+Экспертная валидация: `reports/expert_validation/` — 90 приёмов (30 на кластер,
+по 10 near/middle/boundary), эксперт не видит cluster/distance, ключ хранится
+отдельно. Статус: разметка не проведена. После заполнения:
+`uv run python -m src.expert_validation --evaluate --key reports/expert_validation/sample_key.csv --labels reports/expert_validation/label_template.csv`.
+Порог: kappa >= 0,5 exploratory, >= 0,6 для продуктового вывода.
+
+Sensitivity: `reports/sensitivity/`. На текущих данных: `no_sodium` ARI 0,886,
+`no_water` 0,894, `no_energy` 0,790 — решение не держится на одном нутриенте;
+`no_clip` 0,562 и min share 0,1 % — clip обязателен; `ilr_only` 0,064 —
+композиции БЖУ недостаточно; `relaxed_all_meals` 0,661 и min share 1,3 % —
+при неполных приёмах K=3 вырождается; `no_meal_replacement` 0,441 и min share
+19,1 % — без `meal_replacement_powder` K=3 остаётся невырожденным, но
+разбиение меняется; `kmeans_k2` 0,583, `gmm_k3` 0,252. Кластер 0 на 67 %
+состоит из приёмов с `meal_replacement_powder`: это продукт-специфичный
+паттерн, его нельзя обобщать как общий тип питания. Итог: `K-Means, K=3` на
+`core_complete` остаётся основным решением, но экстраполяция на неполные
+приёмы и на другие каталоги продуктов не защищена.
+
 ## Отличия от block07_exam_project
 
 - Нутриенты не суммируются на уровне приёма: используются средние значения и
@@ -176,6 +245,6 @@ uv run python -m src.prepare --usda-dir "D:\path\to\usda" --min-products 2
 
 ## Зависимости
 
-Основные: `numpy`, `pandas`, `pyarrow`. Для тестов: `pytest`.
-Полный список — в `pyproject.toml`, `requirements.txt` и
-`requirements-dev.txt`.
+Основные: `numpy`, `pandas`, `pyarrow`, `scikit-learn`, `matplotlib`, `joblib`.
+Для разработки: `pytest`, `ruff`. Полный список — в `pyproject.toml`,
+`requirements.txt` и `requirements-dev.txt`.

@@ -10,6 +10,7 @@
 неё используются средние значения и плотность на 100 ккал, а размер
 приёма выносится в отдельный признак ``n_products``.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -114,7 +115,9 @@ class DataPreparer:
             if column in table.columns:
                 table[column] = table[column].astype("string")
         if "fdc_id" in table.columns:
-            table["fdc_id"] = table["fdc_id"].map(_normalize_identifier).astype("string")
+            table["fdc_id"] = (
+                table["fdc_id"].map(_normalize_identifier).astype("string")
+            )
         if "n_images" in table.columns:
             table["n_images"] = pd.to_numeric(
                 table["n_images"], errors="coerce"
@@ -164,8 +167,7 @@ class DataPreparer:
         ]
         if not nutrient_columns:
             raise ValueError(
-                "В таблице нет ни одной колонки нутриентов из "
-                f"{self.nutrient_columns}"
+                f"В таблице нет ни одной колонки нутриентов из {self.nutrient_columns}"
             )
         prepared = data.copy()
         prepared["_completeness"] = prepared[nutrient_columns].notna().mean(axis=1)
@@ -212,9 +214,8 @@ class DataPreparer:
         else:
             table["core_completeness"] = pd.NA
             table["core_complete"] = False
-        table["is_reliable"] = (
-            table["core_complete"]
-            & (table["n_products_with_nutrients"] >= self.min_products_with_nutrients)
+        table["is_reliable"] = table["core_complete"] & (
+            table["n_products_with_nutrients"] >= self.min_products_with_nutrients
         )
         return table
 
@@ -235,9 +236,7 @@ class DataPreparer:
             mean_column = f"{column}_mean_per_100g"
             if mean_column not in table.columns:
                 continue
-            table[f"{column}_mean_per_100kcal"] = (
-                100 * table[mean_column] / safe_energy
-            )
+            table[f"{column}_mean_per_100kcal"] = 100 * table[mean_column] / safe_energy
         return table
 
     def aggregate_by_user_meal(self, product_table: pd.DataFrame) -> pd.DataFrame:
@@ -250,7 +249,9 @@ class DataPreparer:
         required = {"id", "date", "meal", "product"}
         missing = required - set(product_table.columns)
         if missing:
-            raise ValueError(f"В таблице продуктов отсутствуют колонки: {sorted(missing)}")
+            raise ValueError(
+                f"В таблице продуктов отсутствуют колонки: {sorted(missing)}"
+            )
 
         data, nutrient_columns = self._prepare_quality(product_table)
         grouped = data.groupby(["id", "date", "meal"], dropna=False)
@@ -262,20 +263,13 @@ class DataPreparer:
         ).reset_index()
 
         means = (
-            grouped[nutrient_columns]
-            .mean()
-            .add_suffix("_mean_per_100g")
-            .reset_index()
+            grouped[nutrient_columns].mean().add_suffix("_mean_per_100g").reset_index()
         )
         counts = (
-            grouped[nutrient_columns]
-            .count()
-            .add_suffix("_n_products")
-            .reset_index()
+            grouped[nutrient_columns].count().add_suffix("_n_products").reset_index()
         )
-        meal = (
-            summary.merge(means, on=["id", "date", "meal"], how="left")
-            .merge(counts, on=["id", "date", "meal"], how="left")
+        meal = summary.merge(means, on=["id", "date", "meal"], how="left").merge(
+            counts, on=["id", "date", "meal"], how="left"
         )
         meal = self._add_coverage(meal, nutrient_columns)
         meal = self._add_energy_density(meal, nutrient_columns)
@@ -291,7 +285,9 @@ class DataPreparer:
         required = {"id", "date", "meal", "product"}
         missing = required - set(product_table.columns)
         if missing:
-            raise ValueError(f"В таблице продуктов отсутствуют колонки: {sorted(missing)}")
+            raise ValueError(
+                f"В таблице продуктов отсутствуют колонки: {sorted(missing)}"
+            )
 
         data, nutrient_columns = self._prepare_quality(product_table)
         grouped = data.groupby(["id", "date"], dropna=False)
@@ -309,27 +305,22 @@ class DataPreparer:
 
         summary = grouped.agg(**aggregations).reset_index()
         means = (
-            grouped[nutrient_columns]
-            .mean()
-            .add_suffix("_mean_per_100g")
-            .reset_index()
+            grouped[nutrient_columns].mean().add_suffix("_mean_per_100g").reset_index()
         )
         counts = (
-            grouped[nutrient_columns]
-            .count()
-            .add_suffix("_n_products")
-            .reset_index()
+            grouped[nutrient_columns].count().add_suffix("_n_products").reset_index()
         )
-        day = (
-            summary.merge(means, on=["id", "date"], how="left")
-            .merge(counts, on=["id", "date"], how="left")
+        day = summary.merge(means, on=["id", "date"], how="left").merge(
+            counts, on=["id", "date"], how="left"
         )
         day = self._add_coverage(day, nutrient_columns)
         day = self._add_energy_density(day, nutrient_columns)
         day = self._add_reliability(day, nutrient_columns)
         return day.sort_values(["id", "date"]).reset_index(drop=True)
 
-    def prepare(self, force: bool = False) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    def prepare(
+        self, force: bool = False
+    ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """Построить и сохранить продуктовую, приёмную и дневную таблицы."""
         product = self.build_product_table(force=force)
         meal = self.aggregate_by_user_meal(product)

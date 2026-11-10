@@ -1,0 +1,95 @@
+{
+  "created_at": "2026-11-10T03:36:13.223418",
+  "data_sha256": "4bdb11259e534c59e15ba4cea4d3c95d06f3da9658bb093cbd6ce797c9ccab13",
+  "n_meal_table": 15323,
+  "n_input": 10817,
+  "n_dropped": 0,
+  "n_samples": 10817,
+  "feature_columns": [
+    "ilr_protein_fat_carb",
+    "ilr_fat_carb",
+    "energy_density",
+    "fiber_g_density",
+    "sugars_g_density",
+    "saturated_fat_g_density",
+    "sodium_mg_density",
+    "potassium_mg_density",
+    "water_g_density",
+    "log_n_products",
+    "missing_fiber_g_density",
+    "missing_sugars_g_density",
+    "missing_saturated_fat_g_density",
+    "missing_sodium_mg_density",
+    "missing_potassium_mg_density",
+    "missing_water_g_density"
+  ],
+  "continuous_columns": [
+    "ilr_protein_fat_carb",
+    "ilr_fat_carb",
+    "energy_density",
+    "fiber_g_density",
+    "sugars_g_density",
+    "saturated_fat_g_density",
+    "sodium_mg_density",
+    "potassium_mg_density",
+    "water_g_density",
+    "log_n_products"
+  ],
+  "indicator_columns": [
+    "missing_fiber_g_density",
+    "missing_sugars_g_density",
+    "missing_saturated_fat_g_density",
+    "missing_sodium_mg_density",
+    "missing_potassium_mg_density",
+    "missing_water_g_density"
+  ],
+  "algorithms": [
+    "kmeans",
+    "gmm",
+    "agglomerative"
+  ],
+  "k_values": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "selected": {
+    "algorithm": "kmeans",
+    "k": 3,
+    "stable": true,
+    "median_ari": 0.984057343802559,
+    "silhouette": 0.32163576879732064,
+    "min_cluster_share": 0.11888693722843673,
+    "reason": "stable"
+  },
+  "min_ari": 0.75,
+  "min_share": 0.05,
+  "bootstrap": 30,
+  "random_state": 42,
+  "versions": {
+    "scikit-learn": "1.9.1",
+    "pandas": "3.1.1",
+    "numpy": "2.5.4"
+  },
+  "cluster_sizes": [
+    {
+      "cluster": 0,
+      "n": 1286,
+      "share": 0.11888693722843673
+    },
+    {
+      "cluster": 1,
+      "n": 7574,
+      "share": 0.7001941388555052
+    },
+    {
+      "cluster": 2,
+      "n": 1957,
+      "share": 0.18091892391605804
+    }
+  ]
+}

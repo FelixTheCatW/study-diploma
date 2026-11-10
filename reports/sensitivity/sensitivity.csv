@@ -1,0 +1,12 @@
+variant,algorithm,k,n_features,n_samples_fit,n_common,ari_vs_reference,min_cluster_share,note
+reference_kmeans,kmeans,3,16,10817,10817,1.0,0.11888693722843673,"core_complete, clip=True"
+kmeans_k2,kmeans,2,16,10817,10817,0.5831912355796696,0.20569473976148656,same features
+gmm_k2,gmm,2,16,10817,10817,0.34592446470482474,0.1416289174447629,same features
+gmm_k3,gmm,3,16,10817,10817,0.25168811166144656,0.04187852454469816,same features
+no_sodium,kmeans,3,14,10817,10817,0.8855302196668905,0.12415642044929277,feature ablation
+no_water,kmeans,3,14,10817,10817,0.8936769946369523,0.11444947767403162,feature ablation
+no_energy,kmeans,3,15,10817,10817,0.789981049263145,0.137376352038458,feature ablation
+ilr_only,kmeans,3,3,10817,10817,0.06383191727127771,0.012480354996764352,composition + complexity only
+no_clip,kmeans,3,16,10817,10817,0.5620701543763016,0.0007395765924008505,no robust-z clipping
+relaxed_all_meals,kmeans,3,16,15323,10817,0.660641872029052,0.01257280207081446,"all meals, median core imputation; imputed_core=139"
+no_meal_replacement,kmeans,3,16,9875,9875,0.4408317502257429,0.19058227848101267,excluded 1158 meal_replacement_powder meals

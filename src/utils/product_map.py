@@ -5,9 +5,9 @@
 197 продуктов проекта используется ручная таблица. Продукты с неоднозначным
 названием намеренно остаются без матча: лучше ``NaN``, чем неверный профиль.
 """
+
 from __future__ import annotations
 
-from collections.abc import Iterable
 from os import PathLike
 from pathlib import Path
 
@@ -48,21 +48,21 @@ def load_product_map(path: str | PathLike) -> pd.DataFrame:
     """Загрузить и проверить курируемую таблицу продукт → ``fdc_id``."""
     map_path = Path(path)
     if not map_path.exists():
-        raise FileNotFoundError(f"Таблица сопоставления продуктов не найдена: {map_path}")
+        raise FileNotFoundError(
+            f"Таблица сопоставления продуктов не найдена: {map_path}"
+        )
 
     table = pd.read_csv(map_path, dtype=str, keep_default_na=False)
     missing = [column for column in MAP_COLUMNS if column not in table.columns]
     if missing:
-        raise ValueError(
-            f"В таблице сопоставления отсутствуют колонки: {missing}"
-        )
+        raise ValueError(f"В таблице сопоставления отсутствуют колонки: {missing}")
 
     table = table.copy()
     table["product"] = table["product"].map(normalize_product)
     table["fdc_id"] = table["fdc_id"].str.strip()
     table.loc[table["fdc_id"] == "", "fdc_id"] = pd.NA
-    table["reviewed"] = table["reviewed"].str.strip().str.lower().isin(
-        {"true", "1", "yes", "да"}
+    table["reviewed"] = (
+        table["reviewed"].str.strip().str.lower().isin({"true", "1", "yes", "да"})
     )
 
     duplicates = table.loc[table["product"].duplicated(), "product"].tolist()

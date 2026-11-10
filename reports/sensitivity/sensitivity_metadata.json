@@ -1,0 +1,9 @@
+{
+  "reference": "core_complete, K-Means, clip=True",
+  "k": 3,
+  "random_state": 42,
+  "n_core": 10817,
+  "n_relaxed": 15323,
+  "n_imputed_core": 139,
+  "n_dropped_relaxed": 0
+}
