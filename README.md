@@ -186,7 +186,9 @@ uv run python -m src.sensitivity
 `высокоэнергетический белково-жировой` (1 286), `смешанный/типичный` (7 574),
 `растительный высококлетчаточный` (1 957). Флаги: `high_saturated_fat`,
 `high_sugars`, `high_sodium`, `low_fiber`, `low_protein` по перцентилям
-reference; пропуск не трактуется как низкое значение.
+reference; пропуск не трактуется как низкое значение. Артефакты:
+`cluster_scope.csv` и `decision.md` — фиксируют финальное K, признаки и
+продукт-специфичный статус кластера 0.
 
 Экспертная валидация: `reports/expert_validation/` — 90 приёмов (30 на кластер,
 по 10 near/middle/boundary), эксперт не видит cluster/distance, ключ хранится

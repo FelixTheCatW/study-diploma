@@ -101,6 +101,7 @@ def build_expert_pack(
     key["cluster_name"] = (
         pack["cluster_name"] if "cluster_name" in pack.columns else pack["cluster"]
     )
+    key["distance"] = key["distance"].round(10)
     key.to_csv(output / "sample_key.csv", index=False, encoding="utf-8")
 
     sample_columns = [column for column in SAMPLE_COLUMNS if column in pack.columns]
@@ -201,9 +202,7 @@ def evaluate_expert_labels(
         raise ValueError("Нет заполненных экспертных меток")
 
     merged["cluster_name"] = merged["cluster_name"].astype(str)
-    labels_sorted = sorted(
-        set(merged["cluster_name"]) | set(merged["expert_pattern"])
-    )
+    labels_sorted = sorted(set(merged["cluster_name"]) | set(merged["expert_pattern"]))
     matrix = confusion_matrix(
         merged["cluster_name"],
         merged["expert_pattern"],

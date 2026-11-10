@@ -10,6 +10,18 @@
 | 1 | смешанный/типичный | 7574 | 0.700 | 0.472 | 0.301 | 0.227 | 3.352 | 111.512 |
 | 2 | растительный высококлетчаточный | 1957 | 0.181 | 0.299 | 0.277 | 0.424 | 3.001 | 61.492 |
 
+## Финальное решение
+
+Основная модель: `kmeans`, `K=3`, 16 признаков, выборка `core_complete` (10817 приёмов), clip ±5. Решение по кластерам:
+
+| cluster | cluster_name | scope | top_product | top_product_share | max_abs_z |
+|---|---|---|---|---|---|
+| 0 | высокоэнергетический белково-жировой | product_specific | meal_replacement_powder | 0.673 | 1.887 |
+| 1 | смешанный/типичный | mixed | egg | 0.393 | 0.273 |
+| 2 | растительный высококлетчаточный | pattern | cabbage | 0.225 | 1.316 |
+
+Кластер 0 — продукт-специфичный: доминирует `meal_replacement_powder`; его нельзя обобщать как общий тип питания. Кластер 1 — смешанный/типичный, кластер 2 — выраженный растительный паттерн. Экспертная валидация не проведена, поэтому продуктовые утверждения заблокированы.
+
 ## Топ отличий
 
 | cluster | feature | cluster_mean | overall_mean | z_score |
@@ -61,5 +73,5 @@
 
 - `cluster_cards.md`, `cluster_examples.csv`, `cluster_distribution.csv`;
 - `cluster_profiles.csv`, `cluster_top_features.csv`, `cluster_flags.csv`;
-- `cluster_products.csv`;
+- `cluster_products.csv`, `cluster_scope.csv`, `decision.md`;
 - `reports/expert_validation/`.
