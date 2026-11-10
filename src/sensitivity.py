@@ -86,6 +86,7 @@ def run_sensitivity(
     *,
     k: int = 3,
     random_state: int = 42,
+    product_table_path: str | Path | None = PRODUCT_TABLE_PATH,
 ) -> tuple[pd.DataFrame, dict[str, object]]:
     core_features = build_feature_table(meal_table)
     x_core = feature_matrix(core_features)
@@ -303,8 +304,9 @@ def run_sensitivity(
         ),
     )
 
-    if PRODUCT_TABLE_PATH.exists():
-        products = pd.read_csv(PRODUCT_TABLE_PATH)
+    product_path = Path(product_table_path) if product_table_path is not None else None
+    if product_path is not None and product_path.exists():
+        products = pd.read_csv(product_path)
         products["meal_id"] = meal_id_series(products)
         mrp_ids = set(
             products.loc[products["product"].eq("meal_replacement_powder"), "meal_id"]
@@ -345,6 +347,62 @@ def run_sensitivity(
     return table, metadata
 
 
+def _conclusions(table: pd.DataFrame) -> list[str]:
+    values = table.set_index("variant")
+    lines: list[str] = []
+
+    def get(name: str) -> pd.Series | None:
+        return values.loc[name] if name in values.index else None
+
+    ablations = [get("no_sodium"), get("no_water"), get("no_energy")]
+    if all(row is not None and row["ari_vs_reference"] >= 0.7 for row in ablations):
+        lines.append(
+            "- `no_sodium`, `no_water`, `no_energy`: ARI остаётся высоким; "
+            "решение не держится на одном нутриенте."
+        )
+    no_clip = get("no_clip")
+    if no_clip is not None:
+        lines.append(
+            f"- `no_clip`: ARI `{no_clip['ari_vs_reference']:.3f}`, "
+            f"min share `{no_clip['min_cluster_share']:.1%}`; "
+            "без clip решение вырождается."
+        )
+    ilr = get("ilr_only")
+    if ilr is not None and ilr["ari_vs_reference"] < 0.3:
+        lines.append(
+            f"- `ilr_only`: ARI `{ilr['ari_vs_reference']:.3f}`; "
+            "только композиции БЖУ недостаточно, плотности нутриентов несут "
+            "основной сигнал."
+        )
+    relaxed = get("relaxed_all_meals")
+    if relaxed is not None:
+        lines.append(
+            f"- `relaxed_all_meals`: ARI `{relaxed['ari_vs_reference']:.3f}`, "
+            f"min share `{relaxed['min_cluster_share']:.1%}`; "
+            "неполные приёмы не подтверждают основное решение."
+        )
+    no_mrp = get("no_meal_replacement")
+    if no_mrp is not None:
+        lines.append(
+            f"- `no_meal_replacement`: ARI `{no_mrp['ari_vs_reference']:.3f}`, "
+            f"min share `{no_mrp['min_cluster_share']:.1%}`; "
+            "кластер 0 частично определяется `meal_replacement_powder`."
+        )
+    k2 = get("kmeans_k2")
+    if k2 is not None:
+        lines.append(
+            f"- `kmeans_k2`: ARI `{k2['ari_vs_reference']:.3f}`; "
+            "K=2 — другое, более грубое решение."
+        )
+    gmm3 = get("gmm_k3")
+    if gmm3 is not None:
+        lines.append(
+            f"- `gmm_k3`: ARI `{gmm3['ari_vs_reference']:.3f}`, "
+            f"min share `{gmm3['min_cluster_share']:.1%}`; GMM K=3 отклонён."
+        )
+    return lines
+
+
 def _md_table(table: pd.DataFrame) -> str:
     columns = list(table.columns)
     lines = [
@@ -363,6 +421,7 @@ def _md_table(table: pd.DataFrame) -> str:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Sensitivity-анализ кластеров")
     parser.add_argument("--meal-table", type=Path, default=MEAL_TABLE_PATH)
+    parser.add_argument("--product-table", type=Path, default=PRODUCT_TABLE_PATH)
     parser.add_argument("--reports-dir", type=Path, default=REPORTS_DIR / "sensitivity")
     parser.add_argument("--k", type=int, default=3)
     parser.add_argument("--random-state", type=int, default=42)
@@ -373,6 +432,7 @@ def main(argv: list[str] | None = None) -> int:
         meal_table,
         k=args.k,
         random_state=args.random_state,
+        product_table_path=args.product_table,
     )
     reports_dir = Path(args.reports_dir)
     reports_dir.mkdir(parents=True, exist_ok=True)
@@ -407,6 +467,15 @@ def main(argv: list[str] | None = None) -> int:
                 "интерпретируемости. Если ablation резко снижает ARI, текущий K "
                 "не защищается; если `relaxed_all_meals` даёт низкий ARI, "
                 "присутствует selection bias по полноте профиля.",
+                "",
+                "## Выводы",
+                "",
+                *_conclusions(table),
+                "",
+                "Итог: основной вариант — `K-Means` на `core_complete` с clip. "
+                "Кластер 0 нельзя обобщать как общий паттерн, если в нём "
+                "доминирует `meal_replacement_powder`; это фиксируется в "
+                "решении недели 4.",
                 "",
             ]
         ),

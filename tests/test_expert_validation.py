@@ -59,6 +59,7 @@ def test_build_pack_hides_cluster_labels(tmp_path):
     assert not {"cluster", "distance", "confidence_band"} & set(sample.columns)
     assert key.groupby(["cluster", "confidence_band"]).size().eq(2).all()
     assert not sample["meal_id"].duplicated().any()
+    assert key["distance"].map(lambda value: value == round(value, 10)).all()
 
 
 def test_expert_labels_perfect_agreement(tmp_path):

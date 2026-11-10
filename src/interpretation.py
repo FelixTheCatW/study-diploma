@@ -145,6 +145,41 @@ def _product_counts(sample: pd.DataFrame, n: int = 10) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def _cluster_scope(
+    profiles: pd.DataFrame,
+    products: pd.DataFrame,
+    names: dict[int, str],
+) -> pd.DataFrame:
+    continuous = profiles[~profiles["feature"].str.startswith("missing_")]
+    rows: list[dict[str, object]] = []
+    for cluster, group in continuous.groupby("cluster", sort=True):
+        top = (
+            products[products["cluster"] == cluster]
+            .sort_values("share", ascending=False)
+            .head(1)
+        )
+        top_product = str(top["product"].iloc[0]) if not top.empty else ""
+        top_share = float(top["share"].iloc[0]) if not top.empty else 0.0
+        max_abs_z = float(group["z_score"].abs().max())
+        if top_share >= 0.5:
+            scope = "product_specific"
+        elif max_abs_z < 0.3:
+            scope = "mixed"
+        else:
+            scope = "pattern"
+        rows.append(
+            {
+                "cluster": int(cluster),
+                "cluster_name": names[int(cluster)],
+                "scope": scope,
+                "top_product": top_product,
+                "top_product_share": top_share,
+                "max_abs_z": max_abs_z,
+            }
+        )
+    return pd.DataFrame(rows)
+
+
 def _example_rows(
     sample: pd.DataFrame,
     cluster: int,
@@ -192,6 +227,22 @@ def _md_table(table: pd.DataFrame, float_format: str = ".3f") -> str:
     return "\n".join(lines)
 
 
+def _scope_line(scope: pd.DataFrame, cluster: int) -> str:
+    row = scope[scope["cluster"] == cluster]
+    if row.empty:
+        return "Тип: не определён."
+    item = row.iloc[0]
+    labels = {
+        "pattern": "выраженный паттерн",
+        "mixed": "смешанный/типичный",
+        "product_specific": "продукт-специфичный",
+    }
+    text = f"Тип: {labels.get(str(item['scope']), item['scope'])}"
+    if item["scope"] == "product_specific":
+        text += f"; {item['top_product_share']:.0%} приёмов содержат `{item['top_product']}`"
+    return text + "."
+
+
 def _write_cards(
     path: Path,
     *,
@@ -201,6 +252,7 @@ def _write_cards(
     flags: pd.DataFrame,
     examples: pd.DataFrame,
     products: pd.DataFrame,
+    scope: pd.DataFrame,
 ) -> None:
     lines = ["# Карточки кластеров", ""]
     for cluster in sorted(names):
@@ -220,6 +272,8 @@ def _write_cards(
                 f"ужин {row['supper']:.1%}.",
                 f"- Среднее число продуктов: {row['mean_n_products']:.2f}; "
                 f"энергоплотность: {row['mean_energy_density']:.1f} ккал/100 г.",
+                "",
+                _scope_line(scope, cluster),
                 "",
                 "Отличия от общего среднего:",
                 "",
@@ -318,7 +372,7 @@ def main(argv: list[str] | None = None) -> int:
     sample["meal_id"] = meal_id_series(sample)
     sample["cluster"] = labels
     sample["cluster_name"] = sample["cluster"].map(names)
-    sample["distance"] = distance
+    sample["distance"] = np.round(distance, 10)
     sample = sample.merge(
         _products_by_meal(args.product_table), on="meal_id", how="left"
     )
@@ -336,6 +390,7 @@ def main(argv: list[str] | None = None) -> int:
 
     distribution = _meal_distribution(sample)
     product_counts = _product_counts(sample)
+    scope = _cluster_scope(profiles, product_counts, names)
 
     core_meal_table = meal_table[meal_table["core_complete"].astype(bool)].copy()
     flags = meal_flags(core_meal_table)
@@ -389,6 +444,7 @@ def main(argv: list[str] | None = None) -> int:
     product_counts.assign(cluster_name=product_counts["cluster"].map(names)).to_csv(
         reports_dir / "cluster_products.csv", index=False, encoding="utf-8"
     )
+    scope.to_csv(reports_dir / "cluster_scope.csv", index=False, encoding="utf-8")
     examples.to_csv(reports_dir / "cluster_examples.csv", index=False, encoding="utf-8")
     sizes.assign(cluster_name=sizes["cluster"].map(names)).to_csv(
         reports_dir / "cluster_sizes.csv", index=False, encoding="utf-8"
@@ -401,6 +457,7 @@ def main(argv: list[str] | None = None) -> int:
         flags=flag_summary,
         examples=examples,
         products=product_counts,
+        scope=scope,
     )
 
     expert_paths: dict[str, Path] = {}
@@ -454,6 +511,31 @@ def main(argv: list[str] | None = None) -> int:
             ]
         ),
         "",
+        "## Финальное решение",
+        "",
+        f"Основная модель: `{algorithm}`, `K={k}`, {len(features.feature_columns)} признаков, выборка "
+        f"`core_complete` ({len(sample)} приёмов), clip ±5. Решение по "
+        "кластерам:",
+        "",
+        _md_table(
+            scope[
+                [
+                    "cluster",
+                    "cluster_name",
+                    "scope",
+                    "top_product",
+                    "top_product_share",
+                    "max_abs_z",
+                ]
+            ]
+        ),
+        "",
+        "Кластер 0 — продукт-специфичный: доминирует "
+        "`meal_replacement_powder`; его нельзя обобщать как общий тип питания. "
+        "Кластер 1 — смешанный/типичный, кластер 2 — выраженный растительный "
+        "паттерн. Экспертная валидация не проведена, поэтому продуктовые "
+        "утверждения заблокированы.",
+        "",
         "## Топ отличий",
         "",
         _md_table(
@@ -491,12 +573,31 @@ def main(argv: list[str] | None = None) -> int:
         "",
         "- `cluster_cards.md`, `cluster_examples.csv`, `cluster_distribution.csv`;",
         "- `cluster_profiles.csv`, `cluster_top_features.csv`, `cluster_flags.csv`;",
-        "- `cluster_products.csv`;",
+        "- `cluster_products.csv`, `cluster_scope.csv`, `decision.md`;",
         "- `reports/expert_validation/`.",
         "",
     ]
     (reports_dir / "interpretation_report.md").write_text(
         "\n".join(report_lines), encoding="utf-8"
+    )
+    decision_lines = [
+        "# Решение по кластерам (неделя 4)",
+        "",
+        f"- Основная модель: `{algorithm}`, `K={k}`.",
+        f"- Выборка: {len(sample)} приёмов с `core_complete`; {len(features.feature_columns)} признаков; clip ±5.",
+        "- K=3 сохраняется как baseline: кластер 0 — продукт-специфичный "
+        "(`meal_replacement_powder`), кластер 1 — смешанный/типичный, "
+        "кластер 2 — выраженный растительный паттерн.",
+        "- `meal_replacement_powder` не удалён из основной модели в этой "
+        "итерации; он вынесен в отдельную интерпретацию и не обобщается.",
+        "- Экспертная валидация не проведена; продуктовые утверждения "
+        "заблокированы до kappa >= 0,5 (exploratory) / 0,6 (product).",
+        "- Sensitivity: см. `reports/sensitivity/sensitivity_report.md`; "
+        "без clip и на неполных приёмах K=3 вырождается.",
+        "",
+    ]
+    (reports_dir / "decision.md").write_text(
+        "\n".join(decision_lines), encoding="utf-8"
     )
     print(f"Кластеры: {names}")
     print(f"Отчёты: {reports_dir}")

@@ -1,0 +1,4 @@
+cluster,cluster_name,scope,top_product,top_product_share,max_abs_z
+0,высокоэнергетический белково-жировой,product_specific,meal_replacement_powder,0.6726283048211509,1.8869447883235757
+1,смешанный/типичный,mixed,egg,0.39252706627937684,0.27277604535514727
+2,растительный высококлетчаточный,pattern,cabbage,0.22534491568727644,1.3155222379291978
