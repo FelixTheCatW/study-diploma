@@ -59,6 +59,8 @@
 - Кластеризация: `uv run python -m src.cluster --bootstrap 30`
 - Интерпретация: `uv run python -m src.interpretation`
 - Sensitivity: `uv run python -m src.sensitivity`
+- Рекомендации: `uv run python -m src.recommend`
+- Инференс приёма: `uv run python -m src.inference --help`
 - Экспертная разметка: `uv run python -m src.expert_validation --evaluate`
   (после заполнения `label_template.csv`)
 
