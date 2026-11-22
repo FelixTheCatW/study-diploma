@@ -30,6 +30,9 @@ src/
   cluster.py           CLI кластеризации и отчётов
   interpretation.py    карточки кластеров, примеры, распределения
   flags.py             риск-флаги по перцентилям reference-выборки
+  recommendations.py   правила 2–3 рекомендаций по флагам и кластеру
+  recommend.py         отчёт по правилам и примерам
+  inference.py         инференс сырых 10 нутриентов через Pipeline
   expert_validation.py пакет разметки, agreement, Cohen's kappa
   sensitivity.py       ablation, K=2, GMM, clip, imputation
   keys.py              стабильный meal_id
@@ -44,7 +47,7 @@ src/
 tests/                 pytest-тесты на синтетических данных
 data/                  исходные датасеты
 data/processed/        результат подготовки
-reports/               профилирование, матчинг и отчёты кластеризации
+reports/               профилирование, кластеризация, валидация и рекомендации
 ```
 
 ## Данные
@@ -207,6 +210,32 @@ Sensitivity: `reports/sensitivity/`. На текущих данных: `no_sodiu
 паттерн, его нельзя обобщать как общий тип питания. Итог: `K-Means, K=3` на
 `core_complete` остаётся основным решением, но экстраполяция на неполные
 приёмы и на другие каталоги продуктов не защищена.
+
+## Рекомендации и инференс (неделя 5)
+
+```powershell
+uv run python -m src.recommend
+uv run python -m src.inference --energy-kcal 250 --protein-g 12 --fat-g 8 `
+  --carbohydrates-g 20 --fiber-g 3 --sugars-g 4 --saturated-fat-g 2 `
+  --cholesterol-mg 20 --sodium-mg 150 --potassium-mg 300 --water-g 60 --n-products 2
+```
+
+Правила: `low_fiber`, `low_protein`, `high_saturated_fat`, `high_sodium`,
+`high_sugars`; для кластера 0 добавляется `high_energy_density` и
+product-specific предупреждение. Формируются 2–3 действия, без свободного LLM
+и без медицинских утверждений. Для типичного приёма без флагов — `no_deviation`.
+
+Инференс принимает сырые 10 нутриентов + `n_products`: обязательны energy и
+БЖУ, остальные могут отсутствовать и остаются `NaN`. Вход проверяется по
+типам, отрицательным значениям, нулевой энергии и диапазонам; Pipeline
+загружается из `models/clustering_pipeline.joblib`, без повторного обучения.
+
+Артефакты: `reports/recommendations/` — `rule_table.csv`,
+`cluster_recommendations.csv`, `examples_with_recommendations.csv`,
+`flag_thresholds.json`, `recommendations_report.md`, `status.md`.
+
+Ограничение: рекомендации rule-based и не валидированы экспертом; до kappa
+>= 0,5 они остаются экспериментальными, а кластер 0 нельзя обобщать.
 
 ## Отличия от block07_exam_project
 

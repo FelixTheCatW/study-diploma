@@ -7,6 +7,9 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 import pandas as pd
 
 from src.keys import meal_id_series
@@ -29,6 +32,59 @@ def compute_thresholds(meal_table: pd.DataFrame) -> dict[str, float]:
         else:
             thresholds[column] = float(values.quantile(quantile))
     return thresholds
+
+
+def save_thresholds(thresholds: dict[str, float], path: str | Path) -> None:
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(
+        json.dumps(
+            {
+                key: (None if pd.isna(value) else float(value))
+                for key, value in thresholds.items()
+            },
+            ensure_ascii=False,
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+
+def load_thresholds(path: str | Path) -> dict[str, float]:
+    source = Path(path)
+    if not source.exists():
+        raise FileNotFoundError(f"Пороговые значения флагов не найдены: {source}")
+    payload = json.loads(source.read_text(encoding="utf-8"))
+    return {
+        key: (float("nan") if value is None else float(value))
+        for key, value in payload.items()
+    }
+
+
+def flags_from_density(
+    values: dict[str, float | None],
+    thresholds: dict[str, float],
+) -> dict[str, object]:
+    """Рассчитать флаги по плотностям на 100 ккал для одного приёма."""
+    flags: dict[str, object] = {}
+    missing_input = False
+    n_flags = 0
+    for flag, (column, direction, _) in FLAG_RULES.items():
+        value = values.get(column)
+        threshold = thresholds.get(column, float("nan"))
+        if value is None or pd.isna(value) or pd.isna(threshold):
+            flags[flag] = False
+            missing_input = True
+            continue
+        if direction == "high":
+            flag_value = float(value) > threshold
+        else:
+            flag_value = float(value) < threshold
+        flags[flag] = bool(flag_value)
+        n_flags += int(flag_value)
+    flags["missing_input"] = missing_input
+    flags["n_flags"] = n_flags
+    return flags
 
 
 def meal_flags(
